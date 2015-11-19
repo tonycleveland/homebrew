@@ -1,22 +1,27 @@
-require 'formula'
-
 class AtSpi2Core < Formula
-  homepage 'http://a11y.org'
-  url 'http://ftp.acc.umu.se/pub/GNOME/sources/at-spi2-core/2.10/at-spi2-core-2.10.0.tar.xz'
-  sha256 '964155c7574220a00e11e1c0d91f2d3017ed603920eb1333ff9cbdb6a22744db'
+  desc "Protocol definitions and daemon for D-Bus at-spi"
+  homepage "http://a11y.org"
+  url "https://download.gnome.org/sources/at-spi2-core/2.18/at-spi2-core-2.18.3.tar.xz"
+  sha256 "ada26add94155f97d0f601a20cb7a0e3fd3ba1588c3520b7288316494027d629"
 
-  depends_on 'pkg-config' => :build
-  depends_on 'xz' => :build
-  depends_on 'intltool' => :build
-  depends_on 'gettext'
-  depends_on 'glib'
-  depends_on 'd-bus'
+  bottle do
+    sha256 "96b67926248f6950a20ea28fde034e9a91b6c4c4a14eb3cd54e0aead53224ce6" => :el_capitan
+    sha256 "2c413dbe96a387b290cdc2d9079f6c54be5f4409d3e5785779d5b7f3681bebd9" => :yosemite
+    sha256 "310fe864ee0b4e81fd58e901b02cc9cb16cd8ae21e4cb2438d6e2ff764986d04" => :mavericks
+  end
+
+  depends_on "pkg-config" => :build
+  depends_on "intltool" => :build
+  depends_on "gettext"
+  depends_on "glib"
+  depends_on "d-bus"
   depends_on :x11
+  depends_on "gobject-introspection"
 
   def install
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
-                          "--enable-introspection=no"
-    system "make install"
+                          "--enable-introspection=yes"
+    system "make", "install"
   end
 end

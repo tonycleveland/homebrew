@@ -1,9 +1,8 @@
-require 'formula'
-
 class Msktutil < Formula
-  homepage 'https://code.google.com/p/msktutil/'
-  url 'https://msktutil.googlecode.com/files/msktutil-0.5.tar.bz2'
-  sha1 '2f00acabd7a98f4ad5be2dd88f3f52349f658bb7'
+  desc "Program for interoperability with Active Directory"
+  homepage "https://code.google.com/p/msktutil/"
+  url "https://msktutil.googlecode.com/files/msktutil-0.5.1.tar.bz2"
+  sha256 "ec02f7f19aa5600c5d20f327beaef88ee70211841dc01fa42eb258ae840ae6f0"
 
   def install
     system "./configure", "--disable-debug",

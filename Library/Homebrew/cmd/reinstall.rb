@@ -1,50 +1,50 @@
-require 'cmd/install'
+require "formula_installer"
 
-module Homebrew extend self
+module Homebrew
   def reinstall
-    # At first save the named formulae and remove them from ARGV
-    named = ARGV.named
-    ARGV.delete_if { |arg| named.include? arg }
-    clean_ARGV = ARGV.clone
+    FormulaInstaller.prevent_build_flags unless MacOS.has_apple_developer_tools?
 
-    # Add the used_options for each named formula separately so
-    # that the options apply to the right formula.
-    named.each do |name|
-      ARGV.replace(clean_ARGV)
-      ARGV << name
-      tab = Tab.for_name(name)
-      tab.used_options.each { |option| ARGV << option.to_s }
-      if tab.built_as_bottle and not tab.poured_from_bottle
-        ARGV << '--build-bottle'
-      end
-
-      canonical_name = Formula.canonical_name(name)
-      formula = Formula.factory(canonical_name)
-
-      begin
-        oh1 "Reinstalling #{name} #{ARGV.options_only*' '}"
-        opt_link = HOMEBREW_PREFIX/'opt'/canonical_name
-        if opt_link.exist?
-          keg = Keg.new(opt_link.realpath)
-          backup keg
-        end
-        self.install_formula formula
-      rescue Exception => e
-        ofail e.message unless e.message.empty?
-        restore_backup keg, formula
-        raise 'Reinstall failed.'
-      else
-        backup_path(keg).rmtree if backup_path(keg).exist?
-      end
-    end
+    ARGV.resolved_formulae.each { |f| reinstall_formula(f) }
   end
 
-  def backup keg
+  def reinstall_formula(f)
+    tab = Tab.for_formula(f)
+    options = tab.used_options | f.build.used_options
+
+    notice  = "Reinstalling #{f.full_name}"
+    notice += " with #{options * ", "}" unless options.empty?
+    oh1 notice
+
+    if f.opt_prefix.directory?
+      keg = Keg.new(f.opt_prefix.resolved_path)
+      backup keg
+    end
+
+    fi = FormulaInstaller.new(f)
+    fi.options             = options
+    fi.build_bottle        = ARGV.build_bottle? || (!f.bottled? && tab.build_bottle?)
+    fi.build_from_source   = ARGV.build_from_source?
+    fi.force_bottle        = ARGV.force_bottle?
+    fi.verbose             = ARGV.verbose?
+    fi.debug               = ARGV.debug?
+    fi.prelude
+    fi.install
+    fi.finish
+  rescue FormulaInstallationAlreadyAttemptedError
+    # next
+  rescue Exception
+    ignore_interrupts { restore_backup(keg, f) }
+    raise
+  else
+    backup_path(keg).rmtree if backup_path(keg).exist?
+  end
+
+  def backup(keg)
     keg.unlink
     keg.rename backup_path(keg)
   end
 
-  def restore_backup keg, formula
+  def restore_backup(keg, formula)
     path = backup_path(keg)
     if path.directory?
       path.rename keg
@@ -52,7 +52,7 @@ module Homebrew extend self
     end
   end
 
-  def backup_path path
+  def backup_path(path)
     Pathname.new "#{path}.reinstall"
   end
 end

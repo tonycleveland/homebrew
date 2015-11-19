@@ -1,17 +1,29 @@
-require 'formula'
-
 class Srmio < Formula
-  homepage 'http://www.zuto.de/project/srmio/'
-  url 'http://www.zuto.de/project/files/srmio/srmio-0.1.0.tar.gz'
-  sha1 '681fdf78ea0eae889fa93c929c5806da78fcca15'
+  desc "C library to access the PowerControl of a SRM bike power meter"
+  homepage "http://www.zuto.de/project/srmio/"
+  url "http://www.zuto.de/project/files/srmio/srmio-0.1.1~git1.tar.gz"
+  sha256 "00b3772202034aaada94f1f1c79a1072fac1f69d10ef0afcb751cce74e5ccd31"
+  version "0.1.1~git1"
 
-  def install
-    system "./configure", "--disable-dependency-tracking",
-                          "--prefix=#{prefix}"
-    system "make install"
+  head do
+    url "https://github.com/rclasen/srmio.git"
+
+    depends_on "autoconf" => :build
+    depends_on "automake" => :build
+    depends_on "libtool" => :build
   end
 
-  def test
-    system "#{bin}/srmcmd", "--help"
+  def install
+    if build.head?
+      system "chmod u+x genautomake.sh"
+      system "./genautomake.sh"
+    end
+    system "./configure", "--disable-dependency-tracking",
+                          "--prefix=#{prefix}"
+    system "make", "install"
+  end
+
+  test do
+    system "#{bin}/srmcmd", "--version"
   end
 end

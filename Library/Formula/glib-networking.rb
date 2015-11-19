@@ -1,71 +1,70 @@
-require 'formula'
-
 class GlibNetworking < Formula
-  homepage 'https://launchpad.net/glib-networking'
-  url 'http://ftp.gnome.org/pub/GNOME/sources/glib-networking/2.38/glib-networking-2.38.1.tar.xz'
-  sha256 '32ea1e504f69ff6693ac4119ad598ded50bb0440cf4484d28ef0adf8fcc85653'
+  desc "Network related modules for glib"
+  homepage "https://launchpad.net/glib-networking"
+  url "https://download.gnome.org/sources/glib-networking/2.46/glib-networking-2.46.1.tar.xz"
+  sha256 "d5034214217f705891b6c9e719cc2c583c870bfcfdc454ebbb5e5e8940ac90b1"
 
-  depends_on 'pkg-config' => :build
-  depends_on 'xz' => :build
-  depends_on 'intltool' => :build
-  depends_on 'gettext'
-  depends_on 'glib'
-  depends_on 'gnutls'
-  depends_on 'gsettings-desktop-schemas'
-  depends_on 'curl-ca-bundle' => :optional
-
-  def patches
-    # Patch to fix installation issue
-    # Adapted from upstream: https://git.gnome.org/browse/glib-networking/patch/?id=ce708edb561fa8ea1a5068100f43c6f68092f7f7
-    DATA
+  bottle do
+    cellar :any
+    sha256 "019a74e4cf9d8479d2379ac3d2833150bca7d30fdc662df0046c05ca739c0503" => :el_capitan
+    sha256 "35da1bacbc373d4430dccf0cba27cc84eebc69b6710b36efc63f236c61e09481" => :yosemite
+    sha256 "ab88b21eb30c66be5ba5c7ae77e991849e5370e395f85d2bd0824e78704efede" => :mavericks
   end
 
-  def install
-    if build.with? "curl-ca-bundle"
-      curl_ca_bundle = Formula.factory('curl-ca-bundle').opt_prefix
-      certs_options = "--with-ca-certificates=#{curl_ca_bundle}/share/ca-bundle.crt"
-    else
-      certs_options = "--without-ca-certificates"
-    end
+  depends_on "pkg-config" => :build
+  depends_on "intltool" => :build
+  depends_on "gettext"
+  depends_on "glib"
+  depends_on "gnutls"
+  depends_on "gsettings-desktop-schemas"
 
+  link_overwrite "lib/gio/modules"
+
+  def install
+    # Install files to `lib` instead of `HOMEBREW_PREFIX/lib`.
+    inreplace "configure", "$($PKG_CONFIG --variable giomoduledir gio-2.0)", lib/"gio/modules"
     system "./configure", "--disable-dependency-tracking",
                           "--disable-silent-rules",
                           "--prefix=#{prefix}",
-                          certs_options
-    system "make install"
+                          "--with-ca-certificates=#{etc}/openssl/cert.pem",
+                          # Remove when p11-kit >= 0.20.7 builds on OSX
+                          # see https://github.com/Homebrew/homebrew/issues/36323
+                          # and https://bugs.freedesktop.org/show_bug.cgi?id=91602
+                          "--without-pkcs11"
+    system "make", "install"
+
+    # Delete the cache, will regenerate it in post_install
+    rm lib/"gio/modules/giomodule.cache"
+  end
+
+  def post_install
+    system Formula["glib"].opt_bin/"gio-querymodules", HOMEBREW_PREFIX/"lib/gio/modules"
+  end
+
+  test do
+    (testpath/"gtls-test.c").write <<-EOS.undent
+      #include <gio/gio.h>
+      int main (int argc, char *argv[])
+      {
+        if (g_tls_backend_supports_tls (g_tls_backend_get_default()))
+          return 0;
+        else
+          return 1;
+      }
+    EOS
+
+    # From `pkg-config --cflags --libs gio-2.0`
+    flags = [
+      "-D_REENTRANT",
+      "-I#{HOMEBREW_PREFIX}/include/glib-2.0",
+      "-I#{HOMEBREW_PREFIX}/lib/glib-2.0/include",
+      "-I#{HOMEBREW_PREFIX}/opt/gettext/include",
+      "-L#{HOMEBREW_PREFIX}/lib",
+      "-L#{HOMEBREW_PREFIX}/opt/gettext/lib",
+      "-lgio-2.0", "-lgobject-2.0", "-lglib-2.0", "-lintl",
+    ]
+
+    system ENV.cc, "gtls-test.c", "-o", "gtls-test", *flags
+    system "./gtls-test"
   end
 end
-
-__END__
-diff --git a/tls/tests/Makefile.in b/tls/tests/Makefile.in
-index e657b34..31b96cd 100644
---- a/tls/tests/Makefile.in
-+++ b/tls/tests/Makefile.in
-@@ -655,7 +655,7 @@ CLEANFILES = *.log *.trs $(am__append_13)
- DISTCLEANFILES = 
- MAINTAINERCLEANFILES = 
- EXTRA_DIST = $(all_dist_test_scripts) $(all_dist_test_data) \
--	$(testfiles_DATA)
-+	$(testfiles_data)
- 
- # We support a fairly large range of possible variables.  It is expected that all types of files in a test suite
- # will belong in exactly one of the following variables.
-@@ -741,8 +741,7 @@ test_programs = certificate file-database connection $(NULL) \
- @HAVE_PKCS11_TRUE@	mock-pkcs11.c mock-pkcs11.h \
- @HAVE_PKCS11_TRUE@	mock-interaction.c mock-interaction.h
- 
--testfilesdir = $(installed_testdir)/files
--testfiles_DATA = \
-+testfiles_data = \
- 	files/ca.pem				\
- 	files/ca-roots.pem			\
- 	files/ca-verisign-sha1.pem		\
-@@ -760,6 +759,8 @@ testfiles_DATA = \
- 	files/server-self.pem			\
- 	$(NULL)
- 
-+@ENABLE_INSTALLED_TESTS_TRUE@testfilesdir = $(installed_testdir)/files
-+@ENABLE_INSTALLED_TESTS_TRUE@testfiles_DATA = $(testfiles_data)
- all: $(BUILT_SOURCES)
- 	$(MAKE) $(AM_MAKEFLAGS) all-am
- 

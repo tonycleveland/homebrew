@@ -1,63 +1,28 @@
-require 'formula'
-
 class Neo4j < Formula
-  homepage 'http://neo4j.org'
-  url 'http://dist.neo4j.org/neo4j-community-1.9.4-unix.tar.gz'
-  sha1 '35626670156b3d43038b3fe061c7883e2d32af94'
-  version '1.9.4'
+  desc "Robust (fully ACID) transactional property graph database"
+  homepage "http://neo4j.com"
+  url "http://dist.neo4j.org/neo4j-community-2.3.1-unix.tar.gz"
+  version "2.3.1"
+  sha256 "7b2f30d73af107eacd9a3a619475ef448a08eecb2cdb42ab1f8a38d091c70ecb"
 
-  devel do
-    url 'http://dist.neo4j.org/neo4j-community-2.0.0-M06-unix.tar.gz'
-    sha1 'a39ebc5476ace229e4ad5c901238a2e24a6ef0d7'
-    version '2.0.0-M06'
-  end
+  bottle :unneeded
 
   def install
     # Remove windows files
     rm_f Dir["bin/*.bat"]
 
-    # Fix the permissions on the global settings file.
-    chmod 0644, Dir["config"]
-
     # Install jars in libexec to avoid conflicts
-    libexec.install Dir['*']
+    libexec.install Dir["*"]
 
     # Symlink binaries
-    bin.install_symlink Dir["#{libexec}/bin/neo4j{,-shell}"]
+    bin.install_symlink Dir["#{libexec}/bin/neo4j{,-shell,-import}"]
 
     # Adjust UDC props
-    open("#{libexec}/conf/neo4j-wrapper.conf", 'a') { |f|
+    open("#{libexec}/conf/neo4j-wrapper.conf", "a") do |f|
       f.puts "wrapper.java.additional.4=-Dneo4j.ext.udc.source=homebrew"
-    }
-  end
 
-  def caveats; <<-EOS.undent
-    Quick-start guide:
-
-        1. Start the server manually:
-            neo4j start
-
-        2. Open webadmin:
-            open http://localhost:7474/webadmin/
-
-        3. Start exploring the REST API:
-            curl -v http://localhost:7474/db/data/
-
-        4. Stop:
-            neo4j stop
-
-    To launch on startup, install launchd-agent to ~/Library/LaunchAgents/ with:
-        neo4j install
-
-    If this is an upgrade, see:
-        #{libexec}/UPGRADE.txt
-
-    The manual can be found in:
-        #{libexec}/doc/
-
-    You may need to add JAVA_HOME to your shell profile:
-        export JAVA_HOME="$(/usr/libexec/java_home)"
-
-    EOS
+      # suppress the empty, focus-stealing java gui
+      f.puts "wrapper.java.additional=-Djava.awt.headless=true"
+    end
   end
 end

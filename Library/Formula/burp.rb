@@ -1,29 +1,68 @@
-require 'formula'
-
 class Burp < Formula
-  homepage 'http://burp.grke.org/'
-  url 'http://downloads.sourceforge.net/project/burp/burp-1.3.36%20%28stable%20candidate%29/burp-1.3.36.tar.bz2'
-  sha1 '471237090e631b3cb91ff864db84c7644c42bf87'
+  desc "Network backup and restore"
+  homepage "http://burp.grke.org/"
+  url "http://burp.grke.org/downloads/burp-1.4.28/burp-1.4.28.tar.bz2"
+  sha256 "01c41c07805ebe8c882d7cb9f294e779b6decbe2eb2c81fd65d8fb2b174e18f0"
+  head "https://github.com/grke/burp.git"
 
-  head 'https://github.com/grke/burp.git'
-
-  depends_on 'librsync'
-
-  # patches to change directories to brew conventions in Makefile and config files
-  def patches
-    DATA
+  bottle do
+    cellar :any
+    revision 2
+    sha256 "bb6cf41c1f0dbbfd0a443fe3a01d5ab76ba3197625761d7fbd3c1ea1ec8a0102" => :el_capitan
+    sha256 "e6a66d5a6253fd41f93e8396f9ef0b569dfa71260e23a5a021ecc775b28898ac" => :yosemite
+    sha256 "c65c1af00781bd8f8b2cd2f4dbe04998b2397437c53c3a7135e3f3f2ad9f1489" => :mavericks
   end
 
+  depends_on "librsync"
+  depends_on "openssl"
+
+  # patches to change directories to brew conventions in Makefile and config files
+  patch :DATA
+
   def install
-   system "./configure", "--prefix=#{prefix}",
-                         "--sysconfdir=#{etc}/burp",
-                         "--sbindir=#{bin}",
-                         "--localstatedir=#{var}/burp"
+    system "./configure", "--prefix=#{prefix}",
+                          "--sysconfdir=#{etc}/burp",
+                          "--sbindir=#{bin}",
+                          "--localstatedir=#{var}/burp"
     system "make", "install"
+  end
+
+  def caveats; <<-EOS.undent
+    Before installing the launchd entry you should configure your burp client in
+    #{etc}/burp/burp.conf
+    EOS
   end
 
   test do
     system "#{bin}/burp", "-v"
+  end
+
+  plist_options :startup => true
+
+  def plist; <<-EOS.undent
+    <?xml version="1.0" encoding="UTF-8"?>
+    <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+    <plist version="1.0">
+    <dict>
+      <key>Label</key>
+      <string>#{plist_name}</string>
+      <key>UserName</key>
+      <string>root</string>
+      <key>KeepAlive</key>
+      <false/>
+      <key>ProgramArguments</key>
+      <array>
+        <string>#{opt_bin}/burp</string>
+        <string>-a</string>
+        <string>t</string>
+      </array>
+      <key>StartInterval</key>
+      <integer>1200</integer>
+      <key>WorkingDirectory</key>
+      <string>#{HOMEBREW_PREFIX}</string>
+    </dict>
+    </plist>
+    EOS
   end
 end
 

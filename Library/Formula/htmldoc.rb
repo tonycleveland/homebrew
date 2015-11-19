@@ -1,23 +1,22 @@
-require 'formula'
-
 class Htmldoc < Formula
-  homepage 'http://www.msweet.org/projects.php?Z1'
-  url 'http://www.msweet.org/files/project1/htmldoc-1.8.27-source.tar.bz2'
-  sha1 '472908e0aafed1cedfbacd8ed3168734aebdec4b'
+  desc "Convert HTML to PDF or PostScript"
+  homepage "https://www.msweet.org/projects.php?Z1"
+  url "https://www.msweet.org/files/project1/htmldoc-1.8.28-source.tar.bz2"
+  sha256 "2a688bd820ad6f7bdebb274716102dafbf4d5fcfa20a5b8d87a56b030d184732"
+  revision 1
 
-  # Fixes building with libpng-1.5, from upstream svn r1668 via Fedora
-  # Remove at version 1.8.28. cf. https://github.com/mxcl/homebrew/issues/15915
-  def patches
-    { :p0 => 'http://pkgs.fedoraproject.org/cgit/htmldoc.git/plain/htmldoc-1.8.27-libpng15.patch?h=f18' }
-  end
+  depends_on "libpng"
+  depends_on "jpeg"
+
+  # El Cap Security Framework changes silently break the `htmldoc` compile.
+  # https://github.com/Homebrew/homebrew/issues/45334
+  depends_on MaximumMacOSRequirement => :yosemite
 
   def install
-    ENV.append_to_cflags "-I#{HOMEBREW_PREFIX}/include"
-
-    system "./configure", "--disable-debug", "--disable-dependency-tracking",
+    system "./configure", "--disable-debug",
                           "--prefix=#{prefix}",
                           "--mandir=#{man}"
     system "make"
-    system "make install"
+    system "make", "install"
   end
 end

@@ -1,37 +1,50 @@
-require 'testing_env'
+require "testing_env"
+require "tempfile"
 
-class UtilTests < Test::Unit::TestCase
+class UtilTests < Homebrew::TestCase
+  def setup
+    @dir = Pathname.new(mktmpdir)
+  end
+
+  def teardown
+    @dir.rmtree
+  end
 
   def test_put_columns_empty
-    assert_nothing_raised do
-      # Issue #217 put columns with new results fails.
-      puts_columns []
-    end
+    # Issue #217 put columns with new results fails.
+    assert_silent { puts_columns [] }
   end
 
-  def test_arch_for_command
-    # /usr/bin/svn only exists if the command-line tools are installed
-    # Skip test on Xcode only systems
-    return unless File.exist? '/usr/bin/svn'
-
-    archs = archs_for_command '/usr/bin/svn'
-    if `sw_vers -productVersion` =~ /10\.(\d+)/ and $1.to_i >= 9
-      assert_equal 1, archs.length
-      assert archs.include?(:x86_64)
-    elsif `sw_vers -productVersion` =~ /10\.(\d+)/ and $1.to_i >= 7
-      assert_equal 2, archs.length
-      assert archs.include?(:x86_64)
-      assert archs.include?(:i386)
-    elsif `sw_vers -productVersion` =~ /10\.(\d+)/ and $1.to_i == 6
-      assert_equal 3, archs.length
-      assert archs.include?(:x86_64)
-      assert archs.include?(:i386)
-      assert archs.include?(:ppc7400)
-    else
-      assert_equal 2, archs.length
-      assert archs.include?(:i386)
-      assert archs.include?(:ppc7400)
-    end
+  def test_which
+    cmd = @dir/"foo"
+    FileUtils.touch cmd
+    cmd.chmod 0744
+    assert_equal Pathname.new(cmd),
+      which(File.basename(cmd), File.dirname(cmd))
   end
 
+  def test_which_skip_non_executables
+    cmd = @dir/"foo"
+    FileUtils.touch cmd
+    assert_nil which(File.basename(cmd), File.dirname(cmd))
+  end
+
+  def test_which_skip_malformed_path
+    # 'which' should not fail if a path is malformed
+    # see https://github.com/Homebrew/homebrew/issues/32789 for an example
+    cmd = @dir/"foo"
+    FileUtils.touch cmd
+    cmd.chmod 0744
+
+    # ~~ will fail because ~foo resolves to foo's home and there is no '~' user
+    # here
+    assert_equal Pathname.new(cmd),
+      which(File.basename(cmd), "~~#{File::PATH_SEPARATOR}#{File.dirname(cmd)}")
+  end
+
+  def test_popen_read
+    out = Utils.popen_read("/bin/sh", "-c", "echo success").chomp
+    assert_equal "success", out
+    assert_predicate $?, :success?
+  end
 end

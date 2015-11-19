@@ -1,14 +1,17 @@
-require 'formula'
+class Denominator < Formula
+  desc "Portable Java library for manipulating DNS clouds"
+  homepage "https://github.com/Netflix/denominator/tree/v4.7.1/cli"
+  url "https://bintray.com/artifact/download/netflixoss/maven/com/netflix/denominator/denominator-cli/4.7.1/denominator-cli-4.7.1-fat.jar"
+  version "4.7.1"
+  sha256 "f2d09aaebb63ccb348dcba3a5cc3e94a42b0eae49e90ac0ec2b0a14adfbe5254"
 
-class Denominator < ScriptFileFormula
-  # This is a shell script wrapping a java jar; download as single file using nounzip
-  homepage 'https://github.com/Netflix/denominator/tree/master/cli'
-  url 'http://dl.bintray.com/content/netflixoss/denominator/denominator-cli/release/4.3.2/denominator?direct',
-    :using  => :nounzip
-  version '4.3.2'
-  sha1 '9cdc9d1f3121512eb3bdb0ee93540cce30926702'
+  bottle :unneeded
+
+  def install
+    bin.install "denominator-cli-4.7.1-fat.jar" => "denominator"
+  end
 
   test do
-    system "#{bin}/denominator", "help"
+    system "#{bin}/denominator", "providers"
   end
 end

@@ -1,40 +1,44 @@
-require 'formula'
-
 class Moc < Formula
-  homepage 'http://moc.daper.net'
-  url 'http://ftp.daper.net/pub/soft/moc/unstable/moc-2.5.0-beta1.tar.bz2'
-  sha1 '4030a1fa5c7cfef06909c54d8c7a1fbb93f23caa'
-  head 'svn://daper.net/moc/trunk'
+  desc "Terminal-based music player"
+  homepage "http://moc.daper.net"
+  url "http://ftp.daper.net/pub/soft/moc/stable/moc-2.5.0.tar.bz2"
+  sha256 "d29ea52240af76c4aa56fa293553da9d66675823e689249cee5f8a60657a6091"
 
-  option 'with-ncurses', 'Build with wide character support.'
+  bottle do
+    revision 1
+    sha256 "3188a4355200b250e6a63c909c6ef8a7a458e25377a6a17d6f62455072b38e40" => :yosemite
+    sha256 "ccfd6919a5d64861ecc66f6ad01e8b4f259295dbe3772b459bb139ab0908b2e0" => :mavericks
+    sha256 "94cca91c117a1575aa61a10f288e95672e61bfe0c1d473b2fac70c480c0d92ab" => :mountain_lion
+  end
 
-  depends_on 'pkg-config' => :build
-  depends_on 'gettext' => :build
-  depends_on 'autoconf' => :build
-  depends_on 'automake' => :build
-  depends_on 'libtool' => :build
-  depends_on 'berkeley-db'
-  depends_on 'jack'
-  depends_on 'ffmpeg' => :recommended
-  depends_on 'mad' => :optional
-  depends_on 'flac' => :optional
-  depends_on 'speex' => :optional
-  depends_on 'musepack' => :optional
-  depends_on 'libsndfile' => :optional
-  depends_on 'wavpack' => :optional
-  depends_on 'faad2' => :optional
-  depends_on 'timidity' => :optional
-  depends_on 'libmagic' => :optional
-  # TODO: make this :optional when it works for tap dependencies.
-  depends_on 'homebrew/dupes/ncurses' if build.with? 'ncurses'
+  head do
+    url "svn://daper.net/moc/trunk"
 
-  def patches
-    # Patches up to r2544 (HEAD at 2013-08-13)
-    { :p0 => 'https://gist.github.com/toroidal-code/6310844/raw/23c460144b64040eb6c3117693fd7e129a462b26/ffmpeg-patch.diff' }
-  end unless build.head?
+    depends_on "autoconf" => :build
+    depends_on "automake" => :build
+    depends_on "gettext" => :build
+  end
+
+  option "with-ncurses", "Build with wide character support."
+
+  depends_on "pkg-config" => :build
+  depends_on "libtool" => :run
+  depends_on "berkeley-db"
+  depends_on "jack"
+  depends_on "ffmpeg" => :recommended
+  depends_on "mad" => :optional
+  depends_on "flac" => :optional
+  depends_on "speex" => :optional
+  depends_on "musepack" => :optional
+  depends_on "libsndfile" => :optional
+  depends_on "wavpack" => :optional
+  depends_on "faad2" => :optional
+  depends_on "timidity" => :optional
+  depends_on "libmagic" => :optional
+  depends_on "homebrew/dupes/ncurses" => :optional
 
   def install
-    system "autoreconf", "-i" # required to fix ffmpeg issues (updated ffmpeg.m4)
+    system "autoreconf", "-fvi" if build.head?
     system "./configure", "--disable-debug", "--prefix=#{prefix}"
     system "make", "install"
   end

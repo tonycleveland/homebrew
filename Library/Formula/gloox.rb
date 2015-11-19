@@ -1,76 +1,39 @@
-require 'formula'
-
 class Gloox < Formula
-  homepage 'http://camaya.net/gloox/'
-  url 'http://camaya.net/download/gloox-1.0.tar.bz2'
-  sha1 '8c788738f72b05fae7c05c744a67859419ffa09c'
+  desc "C++ Jabber/XMPP library that handles the low-level protocol"
+  homepage "https://camaya.net/gloox/"
+  url "https://camaya.net/download/gloox-1.0.14.tar.bz2"
+  sha256 "520b72a66fa9fea917a0336872101539f0bea30d1f871e12c31b6c2cd0203941"
 
-  depends_on 'pkg-config' => :build
+  bottle do
+    cellar :any
+    sha256 "b8f386579b18e8bd114fd6e73d12c375ba90d6a3a29b974e4d665b6a3c546406" => :el_capitan
+    sha256 "42999d48ba063b0963e3df47f4b7eda819831d016c2b77e136cc28166c3cf6c9" => :yosemite
+    sha256 "1bad7cafd725cfb2c9f8aadd16a75ce450465fa9bcc003283b13f96858b911e9" => :mavericks
+  end
 
-  # Fix memory leak
-  # http://bugs.camaya.net/horde/whups/ticket/?id=181
-  # Issue tracker is 404 on 3/17/2012 - @adamv
-  def patches; DATA; end
+  depends_on "pkg-config" => :build
+  depends_on "openssl" => :recommended
+  depends_on "gnutls" => :optional
+  depends_on "libidn" => :optional
 
   def install
-    system "./configure", "--disable-debug",
-                          "--prefix=#{prefix}",
-                          "--with-openssl",
-                          "--without-gnutls",
-                          "--with-zlib"
-    system "make install"
+    args = %W[
+      --prefix=#{prefix}
+      --with-zlib
+      --disable-debug
+    ]
+
+    if build.with? "gnutls"
+      args << "--with-gnutls=yes"
+    else
+      args << "--with-openssl=#{Formula["openssl"].opt_prefix}"
+    end
+
+    system "./configure", *args
+    system "make", "install"
+  end
+
+  test do
+    system bin/"gloox-config", "--cflags", "--libs", "--version"
   end
 end
-
-__END__
-diff --git a/src/tlsgnutlsbase.cpp b/src/tlsgnutlsbase.cpp
-index d98c802..37f702d 100644
---- a/src/tlsgnutlsbase.cpp
-+++ b/src/tlsgnutlsbase.cpp
-@@ -97,7 +97,7 @@ namespace gloox
-     gnutls_bye( *m_session, GNUTLS_SHUT_RDWR );
-     gnutls_db_remove_session( *m_session );
-     gnutls_credentials_clear( *m_session );
--    if( m_secure )
-+    if( m_session )
-       gnutls_deinit( *m_session );
- 
-     m_secure = false;
-diff --git a/src/tlsgnutlsclient.cpp b/src/tlsgnutlsclient.cpp
-index c1d24c2..d250f32 100644
---- a/src/tlsgnutlsclient.cpp
-+++ b/src/tlsgnutlsclient.cpp
-@@ -33,6 +33,8 @@ namespace gloox
-   void GnuTLSClient::cleanup()
-   {
-     GnuTLSBase::cleanup();
-+    if (m_credentials)
-+        gnutls_certificate_free_credentials( m_credentials );
-     init();
-   }
- 
-@@ -120,6 +122,7 @@ namespace gloox
-       m_certInfo.status |= CertSignerNotCa;
-     const gnutls_datum_t* certList = 0;
-     unsigned int certListSize;
-+    unsigned int certListSizeFull;
-     if( !error && ( ( certList = gnutls_certificate_get_peers( *m_session, &certListSize ) ) == 0 ) )
-       error = true;
- 
-@@ -131,6 +134,7 @@ namespace gloox
-         error = true;
-     }
- 
-+    certListSizeFull = certListSize;
-     if( ( gnutls_x509_crt_check_issuer( cert[certListSize-1], cert[certListSize-1] ) > 0 )
-          && certListSize > 0 )
-       certListSize--;
-@@ -189,7 +193,7 @@ namespace gloox
-     if( !gnutls_x509_crt_check_hostname( cert[0], m_server.c_str() ) )
-       m_certInfo.status |= CertWrongPeer;
- 
--    for( unsigned int i = 0; i < certListSize; ++i )
-+    for( unsigned int i = 0; i < certListSizeFull; ++i )
-       gnutls_x509_crt_deinit( cert[i] );
- 
-     delete[] cert;

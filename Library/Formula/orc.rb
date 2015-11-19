@@ -1,19 +1,20 @@
-require 'formula'
-
 class Orc < Formula
-  homepage 'http://code.entropywave.com/projects/orc/'
-  url 'http://code.entropywave.com/download/orc/orc-0.4.17.tar.gz'
-  sha1 '5cb7b3225a23bc4a5771a62e9c94a90d21609632'
+  desc "Oil Runtime Compiler (ORC)"
+  homepage "http://cgit.freedesktop.org/gstreamer/orc/"
+  url "http://gstreamer.freedesktop.org/src/orc/orc-0.4.24.tar.xz"
+  sha256 "338cd493b5247300149821c6312bdf7422a3593ae98691fc75d7e4fe727bd39b"
+
+  bottle do
+    cellar :any
+    sha256 "02b833c92904551374f31c2c05146f1078423d56ddeb3b546035d80fa76f2a11" => :el_capitan
+    sha256 "928226e33f369a084c7e60ca0f60bf218d21ba66bf03f1edc8ebff8e3a1add71" => :yosemite
+    sha256 "655f2e92674e8364a95450dbedb56bbe591def168638fc0c7ba4478929f803a7" => :mavericks
+  end
 
   def install
-    # Fix compiling on 32 bit systems. See:
-    # https://trac.macports.org/ticket/26881
-    # https://github.com/mxcl/homebrew/issues/8848
-    ENV["CFLAGS"] = "-Xarch_i386 -O1" #if Hardware.is_32_bit?
-
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
                           "--disable-gtk-doc"
-    system "make install"
+    system "make", "install"
   end
 end

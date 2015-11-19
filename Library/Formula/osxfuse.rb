@@ -1,32 +1,33 @@
-require 'formula'
-
 class Osxfuse < Formula
-  homepage 'http://osxfuse.github.io'
-  url 'https://github.com/osxfuse/osxfuse.git', :tag => 'osxfuse-2.6.1_1'
+  desc "FUSE for OS X: extend native file handling via 3rd-party file systems"
+  homepage "https://osxfuse.github.io/"
+  url "https://github.com/osxfuse/osxfuse.git",
+       :tag => "osxfuse-2.8.2",
+       :revision => "bf71481dedce22ce465de72afdd595337f5a03df"
 
-  head 'https://github.com/osxfuse/osxfuse.git', :branch => 'osxfuse-2'
+  head "https://github.com/osxfuse/osxfuse.git", :branch => "osxfuse-2"
 
   bottle do
-    sha1 'cecee3f4d3d790d4277a4520b988cd8d26eeca90' => :mountain_lion
-    sha1 'f2e691264528e5364bc2dede5e8874a75f657b6e' => :lion
-    sha1 '40e05305257de14c5dda8058de5ad14440e87dde' => :snow_leopard
+    sha256 "aec1cc54836192f91da92619797dcced1283064c09d265c6104fbefbb3cd2286" => :mavericks
   end
 
   depends_on :macos => :snow_leopard
-  depends_on :xcode
-  depends_on :autoconf
-  depends_on :automake
-  depends_on 'gettext' => :build
-  depends_on 'libtool' => :build
+  depends_on :xcode => :build
+
+  # A fairly heinous hack to workaround our dependency resolution getting upset
+  # See https://github.com/Homebrew/homebrew/issues/35073
+  depends_on NonBinaryOsxfuseRequirement => :build
+  depends_on UnsignedKextRequirement => [:cask => "osxfuse",
+                                         :download => "http://sourceforge.net/projects/osxfuse/files/"]
+
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
+  depends_on "libtool" => :build
+  depends_on "gettext" => :build
 
   def install
     # Do not override Xcode build settings
     ENV.remove_cc_etc
-
-    if MacOS::Xcode.provides_autotools?
-      # Xcode version of aclocal does not respect ACLOCAL_PATH
-      ENV['ACLOCAL'] = 'aclocal ' + ENV['ACLOCAL_PATH'].split(':').map {|p| '-I' + p}.join(' ')
-    end
 
     system "./build.sh", "-t", "homebrew", "-f", prefix
   end
@@ -44,7 +45,7 @@ class Osxfuse < Formula
 
     The new osxfuse file system bundle needs to be installed by the root user:
 
-      sudo /bin/cp -RfX #{prefix}/Library/Filesystems/osxfusefs.fs /Library/Filesystems
+      sudo /bin/cp -RfX #{opt_prefix}/Library/Filesystems/osxfusefs.fs /Library/Filesystems/
       sudo chmod +s /Library/Filesystems/osxfusefs.fs/Support/load_osxfusefs
     EOS
   end

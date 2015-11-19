@@ -1,83 +1,84 @@
-require 'formula'
-
 class Io < Formula
-  homepage 'http://iolanguage.com/'
-  url 'https://github.com/stevedekorte/io/archive/2011.09.12.tar.gz'
-  sha1 'edb63aa4ee87052f1512f0770e0c9a9b1ba91082'
+  desc "Small prototype-based programming language"
+  homepage "http://iolanguage.com/"
+  url "https://github.com/stevedekorte/io/archive/2015.11.11.tar.gz"
+  sha256 "00d7be0b69ad04891dd5f6c77604049229b08164d0c3f5877bfab130475403d3"
 
-  head 'https://github.com/stevedekorte/io.git'
+  head "https://github.com/stevedekorte/io.git"
 
-  option 'without-addons', 'Build without addons'
-
-  depends_on 'cmake' => :build
-  depends_on :python => :recommended
-  depends_on 'libevent'
-  depends_on 'libffi'
-  depends_on 'ossp-uuid'
-  depends_on 'pcre'
-  depends_on 'yajl'
-  depends_on 'xz'
-
-  # Used by Bignum add-on
-  depends_on 'gmp' unless build.include? 'without-addons'
-
-  # Used by Fonts add-on
-  depends_on :freetype unless build.include? 'without-addons'
-
-  fails_with :clang do
-    build 421
-    cause <<-EOS.undent
-      make never completes. see:
-      https://github.com/stevedekorte/io/issues/223
-    EOS
+  bottle do
+    sha256 "741314b5c2629688c17eabca50e0a623a9318a44d94568d4d0cf53e86560c2b2" => :el_capitan
+    sha256 "e34facca9debca217eaab84e55c036fe1bbd30a34a18bac927dc4a435947604b" => :yosemite
+    sha256 "6c0b0d22dd8184f20c60b9d35437645314c7149b0a2e34d8c406546faf44e570" => :mavericks
   end
 
-  # Fix recursive inline. See discussion in:
-  # https://github.com/stevedekorte/io/issues/135
-  def patches
-    DATA
+  option "without-addons", "Build without addons"
+
+  depends_on "cmake" => :build
+  depends_on "pkg-config" => :build
+
+  if build.with? "addons"
+    depends_on "glib"
+    depends_on "cairo"
+    depends_on "gmp"
+    depends_on "jpeg"
+    depends_on "libevent"
+    depends_on "libffi"
+    depends_on "libogg"
+    depends_on "libpng"
+    depends_on "libsndfile"
+    depends_on "libtiff"
+    depends_on "libvorbis"
+    depends_on "ossp-uuid"
+    depends_on "pcre"
+    depends_on "yajl"
+    depends_on "xz"
+    depends_on :python => :optional
   end
 
   def install
     ENV.j1
-    if build.without? 'addons'
-      inreplace  "CMakeLists.txt",
-        'add_subdirectory(addons)',
-        '#add_subdirectory(addons)'
+
+    # FSF GCC needs this to build the ObjC bridge
+    ENV.append_to_cflags "-fobjc-exceptions"
+
+    if build.without? "addons"
+      # Turn off all add-ons in main cmake file
+      inreplace "CMakeLists.txt", "add_subdirectory(addons)",
+                                  "#add_subdirectory(addons)"
+    else
+      inreplace "addons/CMakeLists.txt" do |s|
+        if build.without? "python"
+          s.gsub! "add_subdirectory(Python)", "#add_subdirectory(Python)"
+        end
+
+        # Turn off specific add-ons that are not currently working
+
+        # Looks for deprecated Freetype header
+        s.gsub!(/(add_subdirectory\(Font\))/, '#\1')
+        # Builds against older version of memcached library
+        s.gsub!(/(add_subdirectory\(Memcached\))/, '#\1')
+      end
     end
-    if build.without? 'python'
-      inreplace  "addons/CMakeLists.txt",
-        'add_subdirectory(Python)',
-        '#add_subdirectory(Python)'
-    end
-    mkdir 'buildroot' do
-      args = std_cmake_args
-      # For Xcode-only systems, the headers of system's python are inside of Xcode:
-      args << "-DPYTHON_INCLUDE_DIR='#{python.incdir}'" if python
-      # Cmake picks up the system's python dylib, even if we have a brewed one:
-      args << "-DPYTHON_LIBRARY='#{python.libdir}/lib#{python.xy}.dylib'" if python
-      system "cmake", "..", *args
-      system 'make'
-      output = %x[./_build/binaries/io ../libs/iovm/tests/correctness/run.io]
+
+    mkdir "buildroot" do
+      system "cmake", "..", *std_cmake_args
+      system "make"
+      output = `./_build/binaries/io ../libs/iovm/tests/correctness/run.io`
       if $?.exitstatus != 0
         opoo "Test suite not 100% successful:\n#{output}"
       else
         ohai "Test suite ran successfully:\n#{output}"
       end
-      system 'make install'
+      system "make", "install"
     end
   end
-end
 
-__END__
---- a/libs/basekit/source/Common_inline.h	2011-09-12 17:14:12.000000000 -0500
-+++ b/libs/basekit/source/Common_inline.h	2011-12-17 00:46:02.000000000 -0600
-@@ -52,7 +52,7 @@
- 
- #if defined(__APPLE__) 
- 
--	#define NS_INLINE static __inline__ __attribute__((always_inline))
-+	#define NS_INLINE static inline
- 
- 	#ifdef IO_IN_C_FILE
- 		// in .c 
+  test do
+    (testpath/"test.io").write <<-EOS.undent
+      "it works!" println
+    EOS
+
+    assert_equal "it works!\n", shell_output("#{bin}/io test.io")
+  end
+end

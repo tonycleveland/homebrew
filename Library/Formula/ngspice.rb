@@ -1,14 +1,14 @@
-require 'formula'
-
 class Ngspice < Formula
-  homepage 'http://ngspice.sourceforge.net/'
-  url 'http://downloads.sourceforge.net/project/ngspice/ng-spice-rework/25/ngspice-25.tar.gz'
-  sha1 '745c3c32385b7d5c808836e393fe7699f8568860'
+  desc "Spice circuit simulator"
+  homepage "http://ngspice.sourceforge.net/"
+  url "https://downloads.sourceforge.net/project/ngspice/ng-spice-rework/26/ngspice-26.tar.gz"
+  sha256 "51e230c8b720802d93747bc580c0a29d1fb530f3dd06f213b6a700ca9a4d0108"
 
-  option "with-x", "Build with X support"
   option "without-xspice", "Build without x-spice extensions"
 
-  depends_on :x11 if MacOS::X11.installed? or build.include? "with-x"
+  deprecated_option "with-x" => "with-x11"
+
+  depends_on :x11 => :optional
 
   def install
     args = %W[
@@ -16,14 +16,18 @@ class Ngspice < Formula
       --prefix=#{prefix}
       --with-editline=yes
     ]
-    args << "--enable-x" if build.include? "with-x"
-    args << "--enable-xspice" unless build.include? "without-xspice"
+    if build.with? "x11"
+      args << "--with-x"
+    else
+      args << "--without-x"
+    end
+    args << "--enable-xspice" if build.with? "xspice"
 
     system "./configure", *args
-    system "make install"
+    system "make", "install"
   end
 
-  def test
+  test do
     system "#{bin}/ngspice", "-v"
   end
 end

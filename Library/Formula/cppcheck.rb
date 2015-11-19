@@ -1,56 +1,66 @@
-require 'formula'
-
 class Cppcheck < Formula
-  homepage 'http://sourceforge.net/apps/mediawiki/cppcheck/index.php?title=Main_Page'
-  url 'https://github.com/danmar/cppcheck/archive/1.62.1.tar.gz'
-  sha1 '2494a603bd505cc6ae5bd67286410a66cf7996b2'
+  desc "Static analysis of C and C++ code"
+  homepage "https://sourceforge.net/projects/cppcheck/"
+  url "https://github.com/danmar/cppcheck/archive/1.71.tar.gz"
+  sha256 "49f8d44516a1534eb01e3cc8300d60c3577c5e4339336defaf213d08ff914f1b"
+  head "https://github.com/danmar/cppcheck.git"
 
-  head 'https://github.com/danmar/cppcheck.git'
+  bottle do
+    sha256 "57f0796aeae7641466857abb9f55786c62cd1970941756813f9559cf370a25e2" => :el_capitan
+    sha256 "6f7e66fefcf465e8cf3171d9aa63584fe3eaaf9e7aa4c8c8e6b7f519bb7950cc" => :yosemite
+    sha256 "ba9a7d4674ced19e545d25d973ea2127faa91a011940b925200f9cc177c34081" => :mavericks
+  end
 
-  option 'no-rules', "Build without rules (no pcre dependency)"
-  option 'with-gui', "Build the cppcheck gui (requires Qt)"
+  option "without-rules", "Build without rules (no pcre dependency)"
+  option "with-gui", "Build the cppcheck gui (requires Qt)"
 
-  depends_on 'pcre' unless build.include? 'no-rules'
-  depends_on 'qt' if build.include? 'with-gui'
+  deprecated_option "no-rules" => "without-rules"
+
+  depends_on "pcre" if build.with? "rules"
+  depends_on "qt" if build.with? "gui"
+
+  needs :cxx11
 
   def install
+    ENV.cxx11
+
     # Man pages aren't installed as they require docbook schemas.
 
     # Pass to make variables.
-    if build.include? 'no-rules'
-      system "make", "HAVE_RULES=no"
+    if build.with? "rules"
+      system "make", "HAVE_RULES=yes", "CFGDIR=#{prefix}/cfg"
     else
-      system "make", "HAVE_RULES=yes"
+      system "make", "HAVE_RULES=no", "CFGDIR=#{prefix}/cfg"
     end
 
-    system "make", "DESTDIR=#{prefix}", "BIN=#{bin}", "install"
+    # CFGDIR is relative to the prefix for install, don't add #{prefix}.
+    system "make", "DESTDIR=#{prefix}", "BIN=#{bin}", "CFGDIR=/cfg", "install"
 
-    if build.include? 'with-gui'
+    if build.with? "gui"
       cd "gui" do
-        if build.include? 'no-rules'
-          system "qmake", "HAVE_RULES=no"
+        if build.with? "rules"
+          system "qmake", "HAVE_RULES=yes"
         else
-          system "qmake"
+          system "qmake", "HAVE_RULES=no"
         end
 
         system "make"
-        bin.install "cppcheck-gui.app"
+        prefix.install "cppcheck-gui.app"
       end
     end
   end
 
-  def test
-    system "#{bin}/cppcheck", "--version"
-  end
+  test do
+    (testpath/"test.cpp").write <<-EOS.undent
+      #include <iostream>
+      using namespace std;
 
-  def caveats; <<-EOS.undent
-    --with-gui installs cppcheck-gui.app in:
-      #{bin}
-
-    To link the application to a normal Mac OS X location:
-      brew linkapps
-    or:
-      ln -s #{bin}/cppcheck-gui.app /Applications
+      int main()
+      {
+        cout << "Hello World!" << endl;
+        return 0;
+      }
     EOS
+    system "#{bin}/cppcheck", "test.cpp"
   end
 end

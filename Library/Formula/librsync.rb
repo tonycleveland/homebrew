@@ -1,34 +1,38 @@
-require 'formula'
-
 class Librsync < Formula
-  homepage 'http://librsync.sourceforge.net/'
-  url 'http://downloads.sourceforge.net/project/librsync/librsync/0.9.7/librsync-0.9.7.tar.gz'
-  sha1 'd575eb5cae7a815798220c3afeff5649d3e8b4ab'
+  desc "Library that implements the rsync remote-delta algorithm"
+  homepage "http://librsync.sourceforge.net/"
+  url "https://downloads.sourceforge.net/project/librsync/librsync/0.9.7/librsync-0.9.7.tar.gz"
+  sha256 "6633e4605662763a03bb6388529cbdfd3b11a9ec55b8845351c1bd9a92bc41d6"
+
+  bottle do
+    cellar :any
+    revision 1
+    sha256 "12560a233362faa837f9ade76bc4e0018b02fe872cb7f7b3b45351c24a09ec10" => :el_capitan
+    sha1 "754e34fcd1236debb7152e61204364deaa108855" => :yosemite
+    sha1 "3e79aad6623c2332eaa5c650bc9b28e4caf56b9e" => :mavericks
+    sha1 "a0a54b67a85e2e626a4eb9e11b9222afe44351a0" => :mountain_lion
+  end
 
   option :universal
 
-  depends_on 'popt'
-
-  def patches
-    # fixes librsync doesn't correctly export inlined functions:
-    # http://trac.macports.org/ticket/31742
-    # link to upstream bug report:
-    # http://sourceforge.net/tracker/?func=detail&aid=3464437&group_id=56125&atid=479439
-    { :p0 => 'https://trac.macports.org/export/90437/trunk/dports/net/librsync/files/patch-delta.c.diff' }
-  end
+  depends_on "popt"
 
   def install
     ENV.universal_binary if build.universal?
-    system "./configure", "--disable-debug", "--disable-dependency-tracking",
+
+    ENV.append "CFLAGS", "-std=gnu89"
+
+    system "./configure", "--disable-debug",
+                          "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
                           "--mandir=#{man}",
                           "--enable-shared"
 
-    inreplace 'libtool' do |s|
+    inreplace "libtool" do |s|
       s.gsub! /compiler_flags=$/, "compiler_flags=' #{ENV.cflags}'"
       s.gsub! /linker_flags=$/, "linker_flags=' #{ENV.ldflags}'"
     end
 
-    system "make install"
+    system "make", "install"
   end
 end

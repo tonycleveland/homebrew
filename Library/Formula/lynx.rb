@@ -1,19 +1,35 @@
-require 'formula'
-
 class Lynx < Formula
-  homepage 'http://lynx.isc.org/release/'
-  url 'http://lynx.isc.org/release/lynx2.8.7.tar.bz2'
-  sha1 'a34978f7f83cd46bd857cb957faa5a9120458afa'
+  desc "Text-based web browser"
+  homepage "http://lynx.isc.org/release/"
+  url "http://invisible-mirror.net/archives/lynx/tarballs/lynx2.8.8rel.2.tar.bz2"
+  version "2.8.8rel.2"
+  sha256 "6980e75cf0d677fd52c116e2e0dfd3884e360970c88c8356a114338500d5bee7"
+  revision 1
+
+  bottle do
+    revision 1
+    sha256 "1b0f14f892c930a2140a853edd308edc7545b0e2baa1637e77b925209476fe96" => :el_capitan
+    sha1 "5cec5cb413a991777ab1e8ede47059935feae1ca" => :mavericks
+    sha1 "afd1846fe40fc0bac8a4f54d5c06ded1d4eb3725" => :mountain_lion
+    sha1 "1ce39f3889f2b4e9a7f805236097f56fdbcf0fed" => :lion
+  end
+
+  depends_on "openssl"
 
   def install
     system "./configure", "--disable-debug", "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
                           "--mandir=#{man}",
                           "--disable-echo",
+                          "--enable-default-colors",
                           "--with-zlib",
                           "--with-bzlib",
-                          "--with-ssl=#{MacOS.sdk_path}/usr",
+                          "--with-ssl=#{Formula["openssl"].opt_prefix}",
                           "--enable-ipv6"
-    system "make install"
+    system "make", "install"
+  end
+
+  test do
+    system "#{bin}/lynx", "-dump", "http://checkip.dyndns.org"
   end
 end

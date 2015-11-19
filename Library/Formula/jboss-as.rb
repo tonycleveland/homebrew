@@ -1,22 +1,23 @@
-require 'formula'
-
 class JbossAs < Formula
-  homepage 'http://www.jboss.org/jbossas'
-  url 'http://download.jboss.org/jbossas/7.1/jboss-as-7.1.1.Final/jboss-as-7.1.1.Final.tar.gz'
-  version '7.1.1.Final'
-  sha1 'fcec1002dce22d3281cc08d18d0ce72006868b6f'
+  desc "JBoss Application Server"
+  homepage "http://www.jboss.org/jbossas"
+  url "http://download.jboss.org/jbossas/7.1/jboss-as-7.1.1.Final/jboss-as-7.1.1.Final.tar.gz"
+  version "7.1.1.Final"
+  sha256 "88fd3fdac4f7951cee3396eff3d70e8166c3319de82d77374a24e3b422e0b2ad"
+
+  bottle :unneeded
 
   def install
     rm_f Dir["bin/*.bat"]
-    libexec.install Dir['*']
+    libexec.install Dir["*"]
   end
 
   def caveats; <<-EOS.undent
     The home of JBoss Application Server 7 is:
-      #{opt_prefix}/libexec
+      #{opt_libexec}
 
     You may want to add the following to your .bash_profile:
-      export JBOSS_HOME=#{opt_prefix}/libexec
+      export JBOSS_HOME=#{opt_libexec}
       export PATH=${PATH}:${JBOSS_HOME}/bin
 
     Note: The support scripts used by JBoss Application Server 7 have

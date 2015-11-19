@@ -1,23 +1,19 @@
-require 'formula'
-
 class Gcab < Formula
-  homepage 'https://wiki.gnome.org/msitools'
-  url 'http://ftp.gnome.org/pub/GNOME/sources/gcab/0.4/gcab-0.4.tar.xz'
-  sha1 'd81dfe35125e611e3a94c0d4def37ebf62b9187c'
+  desc "Windows installer (.MSI) tool"
+  homepage "https://wiki.gnome.org/msitools"
+  url "https://download.gnome.org/sources/gcab/0.4/gcab-0.4.tar.xz"
+  sha256 "f907b16f1246fbde9397363d9c4ad2291f2a8a53dcd4f5979d3912bb856991b8"
 
-  depends_on 'xz' => :build
-  depends_on 'intltool' => :build
-  depends_on 'pkg-config' => :build
-  depends_on 'vala' => :build
-  depends_on 'gettext'
-  depends_on 'glib'
-  depends_on 'gobject-introspection'
+  depends_on "intltool" => :build
+  depends_on "pkg-config" => :build
+  depends_on "vala" => :build
+  depends_on "gettext"
+  depends_on "glib"
+  depends_on "gobject-introspection"
 
- def patches
-   # work around ld not understanding --version-script argument
-   # upstream bug: https://bugzilla.gnome.org/show_bug.cgi?id=708257
-   DATA
- end
+  # work around ld not understanding --version-script argument
+  # upstream bug: https://bugzilla.gnome.org/show_bug.cgi?id=708257
+  patch :DATA
 
   def install
     system "./configure", "--disable-debug",
@@ -39,4 +35,4 @@ index 2264c17..7782d62 100644
 +	-Wl                                     	\
  	-no-undefined					\
  	$(NULL)
- 
+

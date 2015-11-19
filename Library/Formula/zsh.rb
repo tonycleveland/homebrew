@@ -1,15 +1,22 @@
-require 'formula'
-
 class Zsh < Formula
-  homepage 'http://www.zsh.org/'
-  url 'http://www.zsh.org/pub/zsh-5.0.2.tar.bz2'
-  mirror 'http://downloads.sourceforge.net/project/zsh/zsh/5.0.2/zsh-5.0.2.tar.bz2'
-  sha1 '9f55ecaaae7cdc1495f91237ba2ec087777a4ad9'
+  desc "UNIX shell (command interpreter)"
+  homepage "http://www.zsh.org/"
+  url "https://downloads.sourceforge.net/project/zsh/zsh/5.1.1/zsh-5.1.1.tar.gz"
+  mirror "http://www.zsh.org/pub/zsh-5.1.1.tar.gz"
+  sha256 "94ed5b412023761bc8d2f03c173f13d625e06e5d6f0dff2c7a6e140c3fa55087"
 
-  depends_on 'gdbm'
-  depends_on 'pcre'
+  bottle do
+    sha256 "079cc9661532edf75b4602fffcf900d3d23a1f143f35ca3cce93a37c0fbc6ae8" => :el_capitan
+    sha256 "385e57d2ef3e6ef24925a64cbaaf85d1776d8d466ef366223d7b599583fbaddf" => :yosemite
+    sha256 "932fe97487753363d3ddd683918210367ec29104e700001bbf5cd18c2f4d59fa" => :mavericks
+  end
 
-  option 'disable-etcdir', 'Disable the reading of Zsh rc files in /etc'
+  option "without-etcdir", "Disable the reading of Zsh rc files in /etc"
+
+  deprecated_option "disable-etcdir" => "without-etcdir"
+
+  depends_on "gdbm"
+  depends_on "pcre"
 
   def install
     args = %W[
@@ -18,6 +25,7 @@ class Zsh < Formula
       --enable-scriptdir=#{share}/zsh/scripts
       --enable-site-fndir=#{HOMEBREW_PREFIX}/share/zsh/site-functions
       --enable-site-scriptdir=#{HOMEBREW_PREFIX}/share/zsh/site-scripts
+      --enable-runhelpdir=#{share}/zsh/help
       --enable-cap
       --enable-maildir-support
       --enable-multibyte
@@ -26,7 +34,11 @@ class Zsh < Formula
       --with-tcsetpgrp
     ]
 
-    args << '--disable-etcdir' if build.include? 'disable-etcdir'
+    if build.without? "etcdir"
+      args << "--disable-etcdir"
+    else
+      args << "--enable-etcdir=/etc"
+    end
 
     system "./configure", *args
 
@@ -34,34 +46,22 @@ class Zsh < Formula
     inreplace ["Makefile", "Src/Makefile"],
       "$(libdir)/$(tzsh)/$(VERSION)", "$(libdir)"
 
-    system "make install"
-
-    # See http://zsh.sourceforge.net/Doc/Release/User-Contributions.html#Accessing-On_002dLine-Help
-    mkdir "helpfiles" do
-      system "man zshall | colcrt - | perl ../Util/helpfiles"
-      (share+"zsh/helpfiles").install Dir["*"]
-    end
-  end
-
-  def test
-    system "#{bin}/zsh", "--version"
+    system "make", "install"
+    system "make", "install.info"
   end
 
   def caveats; <<-EOS.undent
-    To use this build of Zsh as your login shell, add it to /etc/shells.
-
-    If you have administrator privileges, you must fix an Apple miss
-    configuration in Mac OS X 10.7 Lion by renaming /etc/zshenv to
-    /etc/zprofile, or Zsh will have the wrong PATH when executed
-    non-interactively by scripts.
-
-    Alternatively, install Zsh with /etc disabled:
-      brew install --disable-etcdir zsh
-
+    In order to use this build of zsh as your login shell,
+    it must be added to /etc/shells.
     Add the following to your zshrc to access the online help:
       unalias run-help
       autoload run-help
-      HELPDIR=#{HOMEBREW_PREFIX}/share/zsh/helpfiles
+      HELPDIR=#{HOMEBREW_PREFIX}/share/zsh/help
     EOS
+  end
+
+  test do
+    assert_equal "homebrew\n",
+      shell_output("#{bin}/zsh -c 'echo homebrew'")
   end
 end

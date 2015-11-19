@@ -1,35 +1,32 @@
-require 'formula'
-
 class GitCola < Formula
-  homepage 'http://git-cola.github.io/'
-  url 'https://github.com/git-cola/git-cola/archive/v1.9.1.tar.gz'
-  sha1 '11f32b43700779583eec06054a24160682a5349e'
+  desc "Highly caffeinated git GUI"
+  homepage "https://git-cola.github.io/"
+  url "https://github.com/git-cola/git-cola/archive/v2.4.tar.gz"
+  sha256 "ef735431a2e58bac7671c4b9ab4fbb369195b16987fe9d3d931a9097c06c7f36"
+  head "https://github.com/git-cola/git-cola.git"
 
-  head 'https://github.com/git-cola/git-cola.git'
-
-  option 'with-docs', "Build man pages using asciidoc and xmlto"
-
-  depends_on :python
-  depends_on 'pyqt'
-
-  if build.include? 'with-docs'
-    # these are needed to build man pages
-    depends_on 'asciidoc'
-    depends_on 'xmlto'
+  bottle do
+    cellar :any_skip_relocation
+    sha256 "1d9b0f0b7df97b5e37fdf2b548f297aca05d303b4b27e66a81bd2972a9164163" => :el_capitan
+    sha256 "0e307cb96047b9448bc531188fb8f44831074647a95819d5de76c59b4c4fb9fa" => :yosemite
+    sha256 "3c1cde2b3b70661603f9eb94d3d0560ceaf27b11b98edb2b68b3bf524c444751" => :mavericks
   end
 
-  def install
-    python do
-      # The python do block creates the PYTHONPATH and temp. site-packages
-      system "make", "prefix=#{prefix}", "install"
+  option "with-docs", "Build manpages and HTML docs"
 
-      if build.include? 'with-docs'
-        system "make", "-C", "share/doc/git-cola",
-                       "-f", "Makefile.asciidoc",
-                       "prefix=#{prefix}",
-                       "install", "install-html"
-      end
+  depends_on "pyqt"
+  depends_on "sphinx-doc" => :build if build.with? "docs"
+
+  def install
+    system "make", "prefix=#{prefix}", "install"
+
+    if build.with? "docs"
+      system "make", "install-doc", "prefix=#{prefix}",
+             "SPHINXBUILD=#{Formula["sphinx-doc"].opt_bin}/sphinx-build"
     end
   end
 
+  test do
+    system "#{bin}/git-cola", "--version"
+  end
 end

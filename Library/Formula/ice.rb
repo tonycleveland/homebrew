@@ -1,86 +1,129 @@
-require 'formula'
-
 class Ice < Formula
-  homepage 'http://www.zeroc.com'
-  url 'http://www.zeroc.com/download/Ice/3.5/Ice-3.5.0.tar.gz'
-  sha1 '699376c76cfda9ffb24c903a1ea18b789f582421'
+  desc "Comprehensive RPC framework"
+  homepage "https://zeroc.com"
+  url "https://github.com/zeroc-ice/ice/archive/v3.6.1-el_capitan.tar.gz"
+  sha256 "4a348ba24daceb7694bc23ee91994e2653c5d869918e44b2b1f0d49a360e93fb"
+  version "3.6.1"
 
-  option 'doc', 'Install documentation'
-  option 'demo', 'Build demos'
+  bottle do
+    sha256 "d6de8a22389eda0100589d1abfe1ed341b3cd2b768a5372adc9035cd2ca3ba21" => :el_capitan
+    sha256 "5becc3d56ac408859947ce7485087370dede96019f0d951960f60a65fd076311" => :yosemite
+    sha256 "65537de34ac6fe8e5691e24c758b1511be8c2a6087acc0df3b8e85ad18a99fcb" => :mavericks
+  end
 
-  depends_on 'berkeley-db'
-  depends_on 'mcpp'
+  option "with-java", "Build Ice for Java and the IceGrid Admin app"
 
-  def patches
-    DATA
+  depends_on "mcpp"
+  depends_on :java => [ "1.7+", :optional]
+  depends_on :macos => :mavericks
+
+  resource "berkeley-db" do
+    url "https://zeroc.com/download/homebrew/db-5.3.28.NC.brew.tar.gz"
+    sha256 "8ac3014578ff9c80a823a7a8464a377281db0e12f7831f72cef1fd36cd506b94"
   end
 
   def install
+    resource("berkeley-db").stage do
+      # BerkeleyDB dislikes parallel builds
+      ENV.deparallelize
+      args = %W[
+        --disable-debug
+        --prefix=#{libexec}
+        --mandir=#{libexec}/man
+        --enable-cxx
+      ]
+
+      if build.with? "java"
+        args << "--enable-java"
+
+        # @externl from ZeroC submitted this patch to Oracle through an internal ticket system
+        inreplace "dist/Makefile.in", "@JAVACFLAGS@",  "@JAVACFLAGS@ -source 1.7 -target 1.7"
+      end
+
+      # BerkeleyDB requires you to build everything from the build_unix subdirectory
+      cd "build_unix" do
+        system "../dist/configure", *args
+        system "make", "install"
+      end
+    end
+
+    inreplace "cpp/src/slice2js/Makefile", /install:/, "dontinstall:"
+
+    if build.with? "java"
+      inreplace "java/src/IceGridGUI/build.gradle", "${DESTDIR}${binDir}/${appName}.app",  "${prefix}/${appName}.app"
+    end
+
+    # Unset ICE_HOME as it interferes with the build
+    ENV.delete("ICE_HOME")
+    ENV.delete("USE_BIN_DIST")
+    ENV.delete("CPPFLAGS")
     ENV.O2
-    inreplace "cpp/config/Make.rules" do |s|
-      s.gsub! "#OPTIMIZE", "OPTIMIZE"
-      s.gsub! "/opt/Ice-$(VERSION)", prefix
-      s.gsub! "/opt/Ice-$(VERSION_MAJOR).$(VERSION_MINOR)", prefix
-    end
 
-    # what want we build?
-    wb = 'config src include'
-    wb += ' doc' if build.include? 'doc'
-    wb += ' demo' if build.include? 'demo'
-    inreplace "cpp/Makefile" do |s|
-      s.change_make_var! "SUBDIRS", wb
-    end
-
-    inreplace "cpp/config/Make.rules.Darwin" do |s|
-      s.change_make_var! "CXXFLAGS", "#{ENV.cflags} -Wall -D_REENTRANT"
-    end
+    args = %W[
+      prefix=#{prefix}
+      USR_DIR_INSTALL=yes
+      OPTIMIZE=yes
+      DB_HOME=#{libexec}
+      MCPP_HOME=#{Formula["mcpp"].opt_prefix}
+    ]
 
     cd "cpp" do
-      system "make"
-      system "make install"
+      system "make", "install", *args
+    end
+
+    # Do not set this for C++ as we need to use various slice compilers to build ice. This will be
+    # unnecessary in the next release
+    args << "embedded_runpath_prefix=#{prefix}"
+
+    cd "objective-c" do
+      system "make", "install", *args
+    end
+
+    if build.with? "java"
+      cd "java" do
+        system "make", "install", *args
+      end
+    end
+
+    cd "php" do
+      args << "install_phpdir=#{share}/php"
+      args << "install_libdir=#{lib}/php/extensions"
+      system "make", "install", *args
     end
   end
-end
 
-__END__
-diff -urN Ice-3.5.0.original/cpp/config/Make.rules.Darwin Ice-3.5.0/cpp/config/Make.rules.Darwin
---- ./cpp/config/Make.rules.Darwin	2013-03-11 15:19:46.000000000 +0000
-+++ ./cpp/config/Make.rules.Darwin	2013-04-02 18:03:40.000000000 +0100
-@@ -11,25 +11,18 @@
- # This file is included by Make.rules when uname is Darwin.
- #
- 
--CXX			= xcrun clang++
-+CXX			?= g++
- 
- CXXFLAGS		= -Wall -Werror -D_REENTRANT
- 
- ifeq ($(OPTIMIZE),yes)
--     #
--     # By default we build binaries with both architectures when optimization is enabled.
--     #
--     ifeq ($(CXXARCHFLAGS),)
--     	CXXARCHFLAGS	:= -arch i386 -arch x86_64
--     endif   
--     CXXFLAGS		:= $(CXXARCHFLAGS) -O2 -DNDEBUG $(CXXFLAGS)
-+     CXXFLAGS		:= -O2 -DNDEBUG $(CXXFLAGS)
- else
--     CXXFLAGS		:= $(CXXARCHFLAGS) -g $(CXXFLAGS)
-+     CXXFLAGS		:= -g $(CXXFLAGS)
- endif
- 
- ifeq ($(CPP11), yes)
-     CPPFLAGS += --std=c++11
--    CXXFLAGS += --stdlib=libc++
- endif
- 
- #
-@@ -72,7 +65,7 @@
- ICEUTIL_OS_LIBS         = -lpthread
- ICE_OS_LIBS             = -ldl
- 
--PLATFORM_HAS_READLINE   := no
-+PLATFORM_HAS_READLINE   := yes
- 
- #
- # QT is used only for the deprecated IceGrid and IceStorm SQL plugins
+  test do
+    (testpath/"Hello.ice").write <<-EOS.undent
+      module Test {
+        interface Hello {
+          void sayHello();
+        };
+      };
+    EOS
+    (testpath/"Test.cpp").write <<-EOS.undent
+      #include <Ice/Ice.h>
+      #include <Hello.h>
+
+      class HelloI : public Test::Hello {
+      public:
+        virtual void sayHello(const Ice::Current&) {}
+      };
+
+      int main(int argc, char* argv[]) {
+        Ice::CommunicatorPtr communicator;
+        communicator = Ice::initialize(argc, argv);
+        Ice::ObjectAdapterPtr adapter =
+            communicator->createObjectAdapterWithEndpoints("Hello", "default -h localhost -p 10000");
+        adapter->add(new HelloI, communicator->stringToIdentity("hello"));
+        adapter->activate();
+        communicator->destroy();
+        return 0;
+      }
+    EOS
+    system "#{bin}/slice2cpp", "Hello.ice"
+    system "xcrun", "clang++", "-c", "-I#{include}", "-I.", "Hello.cpp"
+    system "xcrun", "clang++", "-c", "-I#{include}", "-I.", "Test.cpp"
+    system "xcrun", "clang++", "-L#{lib}", "-o", "test", "Test.o", "Hello.o", "-lIce", "-lIceUtil"
+    system "./test", "--Ice.InitPlugins=0"
+  end
+end

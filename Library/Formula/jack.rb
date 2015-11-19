@@ -1,25 +1,31 @@
-require 'formula'
-
 # This now builds a version of JACKv1 which matches the current API
 # for JACKv2. JACKv2 is not buildable on a number of Mac OS X
 # distributions, and the JACK team instead suggests installation of
 # JACKOSX, a pre-built binary form for which the source is not available.
 # If you require JACKv2, you should use that. Otherwise, this formula should
 # operate fine.
-# Please see https://github.com/mxcl/homebrew/pull/22043 for more info
+# Please see https://github.com/Homebrew/homebrew/pull/22043 for more info
 class Jack < Formula
-  homepage 'http://jackaudio.org'
-  url 'http://jackaudio.org/downloads/jack-audio-connection-kit-0.121.3.tar.gz'
-  sha1 '7d6e2219660222d1512ee704dd88a534b3e3089e'
+  desc "Jack Audio Connection Kit (JACK)"
+  homepage "http://jackaudio.org"
+  url "http://jackaudio.org/downloads/jack-audio-connection-kit-0.124.1.tar.gz"
+  sha256 "eb42df6065576f08feeeb60cb9355dce4eb53874534ad71534d7aa31bae561d6"
 
-  depends_on 'celt'
-  depends_on 'libsndfile'
-  depends_on 'libsamplerate'
+  bottle do
+    revision 2
+    sha256 "b4c1720c1e79b3d9a71cc79906175b90f6e30a8c2704c94e3c941d288b5453cc" => :el_capitan
+    sha1 "d81b70761532c0ab23e4ad05d1637a097a54013d" => :yosemite
+    sha1 "76ccc2252a0fd976c6e90e3473c1e3013646e7b3" => :mavericks
+    sha1 "31a06a65e0b68251172b1816df8c37bfdde7f5bd" => :mountain_lion
+  end
 
-  def patches
-    # Change pThread header include from CarbonCore
-    { :p0 => DATA }
-  end if MacOS.version >= :mountain_lion
+  depends_on "pkg-config" => :build
+  depends_on "berkeley-db"
+  depends_on "libsndfile"
+  depends_on "libsamplerate"
+
+  # Change pThread header include from CarbonCore
+  patch :p0, :DATA if MacOS.version >= :mountain_lion
 
   plist_options :manual => "jackd -d coreaudio"
 
@@ -34,7 +40,7 @@ class Jack < Formula
       <string>#{prefix}</string>
       <key>ProgramArguments</key>
       <array>
-        <string>#{opt_prefix}/bin/jackd</string>
+        <string>#{opt_bin}/jackd</string>
         <string>-d</string>
         <string>coreaudio</string>
       </array>
@@ -48,9 +54,14 @@ class Jack < Formula
   end
 
   def install
-    ENV['LINKFLAGS'] = ENV.ldflags
+    # Makefile hardcodes Carbon header location
+    inreplace Dir["drivers/coreaudio/Makefile.{am,in}"],
+      "/System/Library/Frameworks/Carbon.framework/Headers/Carbon.h",
+      "#{MacOS.sdk_path}/System/Library/Frameworks/Carbon.framework/Headers/Carbon.h"
+
+    ENV["LINKFLAGS"] = ENV.ldflags
     system "./configure", "--prefix=#{prefix}"
-    system "make","install"
+    system "make", "install"
   end
 end
 

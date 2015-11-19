@@ -1,10 +1,11 @@
-require 'formula'
-
 class EasyGit < Formula
-  homepage 'http://people.gnome.org/~newren/eg/'
-  url 'http://people.gnome.org/~newren/eg/download/1.7.3/eg', :using => :ssl3
-  version "1.7.3"
-  sha1 'd17165c20ea1b3887f1f81ec6d1217727b817409'
+  desc "Wrapper to simplify learning and using git"
+  homepage "https://people.gnome.org/~newren/eg/"
+  url "https://people.gnome.org/~newren/eg/download/1.7.5.2/eg"
+  version "1.7.5.2"
+  sha256 "59bb4f8b267261ab3d48c66b957af851d1a61126589173ebcc20ba9f43c382fb"
+
+  bottle :unneeded
 
   def install
     bin.install "eg"

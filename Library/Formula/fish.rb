@@ -1,106 +1,48 @@
-require 'formula'
-
 class Fish < Formula
-  homepage 'http://fishshell.com'
-  url 'http://fishshell.com/files/2.0.0/fish-2.0.0.tar.gz'
-  sha1 '2d28553e2ff975f8e5fed6b266f7a940493b6636'
+  desc "User-friendly command-line shell for UNIX-like operating systems"
+  homepage "http://fishshell.com"
+  url "http://fishshell.com/files/2.2.0/fish-2.2.0.tar.gz"
+  sha256 "a76339fd14ce2ec229283c53e805faac48c3e99d9e3ede9d82c0554acfc7b77a"
+
+  bottle do
+    sha256 "9280e5816611c7cfcdaae77eeb840f93637c102dd2a6f16c00ab68394f4e4cb3" => :el_capitan
+    sha256 "da78a022f31317da5d6be21e6090a6c3424565ee7296b0d8ddd6adae2d6737ec" => :yosemite
+    sha256 "ecb9981625135e46ef4b89fbe08014f7fa1ba9754ca8bcd83afd43996ab7a90d" => :mavericks
+    sha256 "1a87c0e5f9dcecefd1f7e68975ed49308d4ab6a81f70e81b3aecae1b827ea261" => :mountain_lion
+  end
 
   head do
-    url 'https://github.com/fish-shell/fish-shell.git'
+    url "https://github.com/fish-shell/fish-shell.git", :shallow => false
 
-    # Indeed, the head build always builds documentation
-    depends_on 'doxygen' => :build
+    depends_on "autoconf" => :build
+    depends_on "doxygen" => :build
+    depends_on "pcre2"
   end
-
-  depends_on :autoconf
-
-  skip_clean 'share/doc'
-
-  # Don't search extra folders for libiconv
-  def patches; DATA; end unless build.head?
 
   def install
-    system "autoconf"
-    system "./configure", "--prefix=#{prefix}"
-    system "make install"
-  end
-
-  test do
-    system "fish", "-c", "echo"
+    system "autoconf" if build.head?
+    # In Homebrew's 'superenv' sed's path will be incompatible, so
+    # the correct path is passed into configure here.
+    system "./configure", "--prefix=#{prefix}", "SED=/usr/bin/sed"
+    system "make", "install"
   end
 
   def caveats; <<-EOS.undent
     You will need to add:
       #{HOMEBREW_PREFIX}/bin/fish
-    to /etc/shells. Run:
+    to /etc/shells.
+
+    Then run:
       chsh -s #{HOMEBREW_PREFIX}/bin/fish
     to make fish your default shell.
+
+    If you are upgrading from an older version of fish, you should now run:
+      killall fishd
+    to terminate the outdated fish daemon.
     EOS
   end
+
+  test do
+    system "#{bin}/fish", "-c", "echo"
+  end
 end
-
-__END__
-diff --git a/configure.ac b/configure.ac
-index 34f25e1..b9afa51 100644
---- a/configure.ac
-+++ b/configure.ac
-@@ -98,45 +98,6 @@ AC_PROG_INSTALL
- 
- echo "CXXFLAGS: $CXXFLAGS"
- 
--#
--# Detect directories which may contain additional headers, libraries
--# and commands. This needs to be done early - before Autoconf starts
--# to mess with CFLAGS and all the other environemnt variables.
--#
--# This mostly helps OS X users, since fink usually installs out of
--# tree and doesn't update CFLAGS.
--#
--# It also helps FreeBSD which puts libiconv in /usr/local/lib
--
--for i in /usr/pkg /sw /opt /opt/local /usr/local; do
--
--  AC_MSG_CHECKING([for $i/include include directory])
--  if test -d $i/include; then
--    AC_MSG_RESULT(yes)
--    CXXFLAGS="$CXXFLAGS -I$i/include/"
--    CFLAGS="$CFLAGS -I$i/include/"
--  else
--  AC_MSG_RESULT(no)
--  fi
--
--  AC_MSG_CHECKING([for $i/lib library directory])
--  if test -d $i/lib; then
--    AC_MSG_RESULT(yes)
--    LDFLAGS="$LDFLAGS -L$i/lib/ -Wl,-rpath,$i/lib/"
--  else
--    AC_MSG_RESULT(no)
--  fi
--
--  AC_MSG_CHECKING([for $i/bin command directory])
--  if test -d $i/bin; then
--    AC_MSG_RESULT(yes)
--    optbindirs="$optbindirs $i/bin"
--  else
--    AC_MSG_RESULT(no)
--  fi
--
--done
--
- 
- #
- # Tell autoconf to create config.h header
-diff --git a/reader.cpp b/reader.cpp
-index f7f92e5..5f3758b 100644
---- a/reader.cpp
-+++ b/reader.cpp
-@@ -3035,6 +3035,9 @@ const wchar_t *reader_readline(void)
-
-                         /* Since we just inserted a completion, don't immediately do a new autosugg
-                         data->suppress_autosuggestion = true;
-+
-+                        /* Trigger repaint (see #765) */
-+                        reader_repaint_if_needed();
-                     }
-                 }
-                 else

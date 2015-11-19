@@ -1,31 +1,23 @@
-require 'formula'
-
 class Tnef < Formula
-  homepage 'http://sourceforge.net/projects/tnef/'
-  url 'http://downloads.sourceforge.net/project/tnef/tnef/tnef-1.4.9.tar.gz'
-  sha1 'd42ccbe3d41e797fb4133f2e01120680101e8782'
+  desc "Microsoft MS-TNEF attachment unpacker"
+  homepage "https://github.com/verdammelt/tnef"
+  url "https://github.com/verdammelt/tnef/archive/1.4.12.tar.gz"
+  sha256 "fefea5d9481555cc150ab799b9b1e957564e7fd2ead99fa19e87258f263f7c37"
 
-  # LLVM gets confused without a function prototype
-  def patches; DATA; end
+  bottle do
+    cellar :any
+    sha256 "a39a144c679b2ae1dfdde6c3062fd9aefefb9d20c44be0943439a17cd1a81a85" => :yosemite
+    sha256 "f908fdb42132f3cc2904accf4cefa3623f461a5a683bc37f93c258b144d0c465" => :mavericks
+    sha256 "fc3c6f4a0a89f97da20ffea1b99a153e16fc5d9359f73f3c45ca3776912a68e8" => :mountain_lion
+  end
+
+  depends_on "autoconf" => :build
+  depends_on "automake" => :build
+  depends_on "libtool" => :build
 
   def install
+    system "autoreconf", "-i"
     system "./configure", "--prefix=#{prefix}"
-    system "make install"
+    system "make", "install"
   end
 end
-
-__END__
-diff --git a/src/tnef.c b/src/tnef.c
-index 1cb46d1..86aa214 100644
---- a/src/tnef.c
-+++ b/src/tnef.c
-@@ -57,6 +57,9 @@ typedef enum
-     RTF = 'r'
- } MessageBodyTypes;
-
-+// Quick fix for compiling on MacOSX 10.8
-+void free_bodies(VarLenData **bodies, int len);
-+
- /* Reads and decodes a object from the stream */
- 
- static Attr*

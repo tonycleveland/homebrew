@@ -1,35 +1,22 @@
-require 'formula'
-
 class PysideTools < Formula
-  homepage 'http://www.pyside.org'
-  url 'http://qt-project.org/uploads/pyside/pyside-tools-0.2.14.tar.bz2'
-  sha1 'f654553bc9bfb35dbc5673da26830969393f9fe8'
+  desc "PySide development tools (pyuic and pyrcc)"
+  homepage "https://wiki.qt.io/PySide"
+  url "https://github.com/PySide/Tools/archive/0.2.15.tar.gz"
+  sha256 "8a7fe786b19c5b2b4380aff0a9590b3129fad4a0f6f3df1f39593d79b01a9f74"
 
-  head 'git://gitorious.org/pyside/pyside-tools.git'
+  head "https://github.com/PySide/Tools.git"
 
-  depends_on 'cmake' => :build
-  depends_on :python => :recommended
-  depends_on :python3 => :optional
-  depends_on 'pyside'
-
-  def install
-    python do
-      args = std_cmake_args
-      args << "-DSITE_PACKAGE=#{python.site_packages}"
-      # The next two lines are because pyside needs this to switch Python
-      # versions in HOMEBREW_PREFIX/lib/cmake/PySide-X.Y.Z/PySideConfig.cmake
-      args << "-DPYTHON_BASENAME=-python2.7" if python2
-      args << "-DPYTHON_BASENAME=.cpython-33m" if python3
-      # And these two lines are because the ShibokenConfig.cmake needs this to
-      # switch python versions. The price for supporting both versions:
-      args << "-DPYTHON_SUFFIX='-python2.7'" if python2
-      args << "-DPYTHON_SUFFIX='.cpython-33m'" if python3
-      system "cmake", ".", *args
-      system "make install"
-    end
+  bottle do
+    sha256 "1f61192245b05946057f47d6a73788a998c86eefc846e1d09821a316c5bc2975" => :yosemite
+    sha256 "2cb88ceddebde2c5ff388a090b53f9a8c6dc986d881a1eab1f57ff2cdb43edf0" => :mavericks
+    sha256 "0c829a3c663e1cdecc343377d7e0ddfe18fc8518360ed495695fefe84da7b221" => :mountain_lion
   end
 
-  def caveats
-    python.standard_caveats if python
+  depends_on "cmake" => :build
+  depends_on "pyside"
+
+  def install
+    system "cmake", ".", "-DSITE_PACKAGE=lib/python2.7/site-packages", *std_cmake_args
+    system "make", "install"
   end
 end

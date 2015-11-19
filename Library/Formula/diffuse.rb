@@ -1,23 +1,19 @@
-require 'formula'
-
 class Diffuse < Formula
-  homepage 'http://diffuse.sourceforge.net/'
-  url 'http://downloads.sourceforge.net/project/diffuse/diffuse/0.4.7/diffuse-0.4.7.tar.bz2'
-  sha1 '9e3b906b579495027b76dc723b5df28e400d3f26'
+  desc "Graphical tool for merging and comparing text files"
+  homepage "http://diffuse.sourceforge.net/"
+  url "https://downloads.sourceforge.net/project/diffuse/diffuse/0.4.8/diffuse-0.4.8.tar.bz2"
+  sha256 "c1d3b79bba9352fcb9aa4003537d3fece248fb824781c5e21f3fcccafd42df2b"
 
-  depends_on :python
-  depends_on 'pygtk'
+  depends_on "pygtk"
 
   def install
-    python do
-      system python, "./install.py",
+    system "python", "./install.py",
                      "--sysconfdir=#{etc}",
                      "--examplesdir=#{share}",
                      "--prefix=#{prefix}"
-    end
   end
 
-  def test
+  test do
     system "#{bin}/diffuse", "--help"
   end
 end

@@ -1,59 +1,22 @@
-require 'formula'
-
 class Nkf < Formula
-  homepage 'http://sourceforge.jp/projects/nkf/'
-  url 'http://dl.sourceforge.jp/nkf/53171/nkf-2.1.2.tar.gz'
-  sha1 'ca301d84e57787f566c933c2a1511f600183c8f1'
+  desc "Network Kanji code conversion Filter (NKF)"
+  homepage "https://osdn.jp/projects/nkf/"
+  url "http://dl.osdn.jp/nkf/59912/nkf-2.1.3.tar.gz"
+  sha256 "8cb430ae69a1ad58b522eb4927b337b5b420bbaeb69df255919019dc64b72fc2"
 
-  def patches
-    # Makefile patch
-    DATA
+  bottle do
+    cellar :any_skip_relocation
+    revision 1
+    sha256 "8ff7763563ac384a0401d5719fd0948c1aaab1a92a1833e37f0fcf5328797f8a" => :el_capitan
+    sha256 "4604f107d1afb7b60216961fae82771bfc79b82c35c1013468b185b96b2691c9" => :yosemite
+    sha256 "be101e0c95328993f661b8d81a23b141cc3f8b863908cc9b7d650eab1b82daa6" => :mavericks
   end
 
   def install
-    ENV['prefix'] = prefix
-    system 'make'
-    system 'make install'
+    inreplace "Makefile", "$(prefix)/man", "$(prefix)/share/man"
+    system "make", "CC=#{ENV.cc}"
+    # Have to specify mkdir -p here since the intermediate directories
+    # don't exist in an empty prefix
+    system "make", "install", "prefix=#{prefix}", "MKDIR=mkdir -p"
   end
 end
-
-__END__
-diff --git a/Makefile b/Makefile
---- a/Makefile
-+++ b/Makefile
-@@ -1,4 +1,4 @@
--CC = cc
-+#CC = cc
- CFLAGS = -g -O2 -Wall -pedantic
- # CFLAGS = -O3
- SHAR = shar 
-@@ -7,7 +7,7 @@
- RM = rm -rf
- VERSION = 2.1.2
- MKDIR = mkdir
--prefix = /usr/local
-+#prefix = /usr/local
- 
- .PHONY: clean install test tar shar
- 
-@@ -35,13 +35,14 @@
- 
- install:
- 	-$(MKDIR) $(prefix)/bin
--	-$(MKDIR) $(prefix)/man
--	-$(MKDIR) $(prefix)/man/man1
--	-$(MKDIR) $(prefix)/man/ja
--	-$(MKDIR) $(prefix)/man/ja/man1
-+	-$(MKDIR) $(prefix)/share
-+	-$(MKDIR) $(prefix)/share/man
-+	-$(MKDIR) $(prefix)/share/man/man1
-+	-$(MKDIR) $(prefix)/share/man/ja
-+	-$(MKDIR) $(prefix)/share/man/ja/man1
- 	cp -f nkf $(prefix)/bin/
--	cp -f nkf.1 $(prefix)/man/man1/
--	cp -f nkf.1j $(prefix)/man/ja/man1/nkf.1
-+	cp -f nkf.1 $(prefix)/share/man/man1/
-+	cp -f nkf.1j $(prefix)/share/man/ja/man1/nkf.1
- 
- shar:
- 	-mkdir nkf-$(VERSION)

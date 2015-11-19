@@ -1,51 +1,35 @@
-require 'formula'
-
 class Duti < Formula
-  homepage 'http://duti.org/'
-  url 'https://github.com/downloads/fitterhappier/duti/duti-1.5.1.tar.gz'
-  sha1 'ac199f936180a3ac62100ae9a31e107a45330557'
+  desc "Select default apps for documents and URL schemes on OS X"
+  homepage "http://duti.org/"
+  url "https://github.com/moretension/duti/archive/duti-1.5.3.tar.gz"
+  sha256 "0e71b7398e01aedf9dde0ffe7fd5389cfe82aafae38c078240780e12a445b9fa"
+  head "https://github.com/moretension/duti.git"
 
-  head 'https://github.com/fitterhappier/duti.git'
+  bottle do
+    cellar :any_skip_relocation
+    revision 1
+    sha256 "eb2195e20db6134589edc886a3d0aa183208b18820e32b7270a2f87b0abacb53" => :el_capitan
+    sha256 "eef68eab84629af9bc431d643053b492d687b5389807e62b3bddbad87caf4d86" => :yosemite
+    sha256 "205e78f2b770b8e377f129afaf85ecdce18a1e6c13ac9f6eb39a620ec729605e" => :mavericks
+  end
 
-  # Replaces arches with the string "@@ARCH@@" so we can fix it post-configure
-  def patches
-    DATA
+  depends_on "autoconf" => :build
+
+  # Add hardcoded SDK path for El Capitan. See https://github.com/moretension/duti/pull/13
+  if MacOS.version == :el_capitan
+    patch do
+      url "https://github.com/moretension/duti/pull/13.patch"
+      sha256 "5e2d482fe73fe95aea23c25417fdc3815f14724e96e4ac60e5a329424a735388"
+    end
   end
 
   def install
+    system "autoreconf", "-vfi"
     system "./configure", "--prefix=#{prefix}"
-    inreplace "Makefile", "@@ARCH@@", MacOS.preferred_arch
-    system "make install"
+    system "make", "install"
   end
 
-  def test
+  test do
     system "#{bin}/duti", "-x", "txt"
   end
 end
-
-__END__
-diff --git a/configure b/configure
-index de1f8e5..de9bcdf 100755
---- a/configure
-+++ b/configure
-@@ -2907,17 +2907,17 @@ fi
- 
- 	darwin10*)
- 	    sdk="/Developer/SDKs/MacOSX10.6.sdk"
--	    macosx_arches="-arch i386 -arch ppc"
-+	    macosx_arches="-arch @@ARCH@@"
- 	    ;;
- 
- 	darwin11*)
- 	    sdk="/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.7.sdk"
--	    macosx_arches="-arch i386 -arch x86_64"
-+	    macosx_arches="-arch @@ARCH@@"
- 	    ;;
- 
- 	darwin12*)
- 	    sdk="/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.8.sdk"
--	    macosx_arches="-arch i386 -arch x86_64"
-+	    macosx_arches="-arch @@ARCH@@"
- 	    ;;
- 	*)
- 	    { { echo "$as_me:$LINENO: error: ${host_os} is not a supported system" >&5

@@ -1,18 +1,27 @@
-require 'formula'
-
 class Byobu < Formula
-  homepage 'http://byobu.co'
-  url 'https://launchpad.net/byobu/trunk/5.60/+download/byobu_5.60.orig.tar.gz'
-  sha1 '567d8d4b4973a8d31e98043a892ca00136714495'
+  desc "Text-based window manager and terminal multiplexer"
+  homepage "http://byobu.co"
+  url "https://launchpad.net/byobu/trunk/5.94/+download/byobu_5.94.orig.tar.gz"
+  sha256 "4917013f590110d25b18293a51af02bd1ebcd1c665474f62e2566fb9b8f62916"
 
-  depends_on 'coreutils'
-  depends_on 'gnu-sed' # fails with BSD sed
-  depends_on 'tmux'
-  depends_on 'newt' => 'with-python'
+  bottle do
+    cellar :any_skip_relocation
+    revision 1
+    sha256 "210e6c1e3e682f64decac62c00f07729f700b22e3aaa4fea115d3276136b4cee" => :el_capitan
+    sha256 "5b9cd209e5607b1a24f000172bbe750906f5ec25c1f653f123332c0d7f314704" => :yosemite
+    sha256 "e554b1b2db2ae5008bff7fadf2ca98e6269c4b68374da80d103379d6b22b68a5" => :mavericks
+  end
+
+  conflicts_with "ctail", :because => "both install `ctail` binaries"
+
+  depends_on "coreutils"
+  depends_on "gnu-sed" # fails with BSD sed
+  depends_on "tmux"
+  depends_on "newt" => "with-python"
 
   def install
     system "./configure", "--prefix=#{prefix}"
-    system "make install"
+    system "make", "install"
   end
 
   def caveats; <<-EOS.undent
@@ -22,6 +31,6 @@ class Byobu < Formula
   end
 
   test do
-    system "#{bin}/byobu-config"
+    system bin/"byobu-status"
   end
 end

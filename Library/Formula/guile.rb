@@ -1,27 +1,33 @@
-require 'formula'
-
 class Guile < Formula
-  homepage 'http://www.gnu.org/software/guile/'
-  url 'http://ftpmirror.gnu.org/guile/guile-2.0.9.tar.gz'
-  mirror 'http://ftp.gnu.org/gnu/guile/guile-2.0.9.tar.gz'
-  sha1 'fc5d770e8b1d364b2f222a8f8c96ccf740b2956f'
+  desc "GUILE: GNU Ubiquitous Intelligent Language for Extensions"
+  homepage "https://www.gnu.org/software/guile/"
+  url "http://ftpmirror.gnu.org/guile/guile-2.0.11.tar.xz"
+  mirror "https://ftp.gnu.org/pub/gnu/guile/guile-2.0.11.tar.xz"
+  sha256 "aed0a4a6db4e310cbdfeb3613fa6f86fddc91ef624c1e3f8937a6304c69103e2"
+  revision 2
 
-  head do
-    url 'git://git.sv.gnu.org/guile.git'
-
-    depends_on 'automake' => :build
-    depends_on 'gettext' => :build
+  bottle do
+    sha256 "d7e7ad8d491f84c1405b82ee8ef0da5b21f551b6a0f2795bae92e8bec2f19be2" => :el_capitan
+    sha256 "8e4d3e402e6eb6d95dcfc308b067beb3f7bed522e801c04f2291ffb29aab8908" => :yosemite
+    sha256 "c62b53570f7ac7061820c2c3009c649ff7fbf176bddd0acc36802303ede235e2" => :mavericks
+    sha256 "51f5f379e25fab5cf8fb7cede02841aa716c0e90356705be2abc6a18c6af5371" => :mountain_lion
   end
 
-  depends_on 'pkg-config' => :build
-  depends_on :libtool
-  depends_on 'libffi'
-  depends_on 'libunistring'
-  depends_on 'bdw-gc'
-  depends_on 'gmp'
+  head do
+    url "http://git.sv.gnu.org/r/guile.git"
 
-  # GNU Readline is required; libedit won't work.
-  depends_on 'readline'
+    depends_on "autoconf" => :build
+    depends_on "automake" => :build
+    depends_on "gettext" => :build
+  end
+
+  depends_on "pkg-config" => :build
+  depends_on "libtool" => :run
+  depends_on "libffi"
+  depends_on "libunistring"
+  depends_on "bdw-gc"
+  depends_on "gmp"
+  depends_on "readline"
 
   fails_with :llvm do
     build 2336
@@ -33,29 +39,31 @@ class Guile < Formula
     cause "Segfaults during compilation"
   end
 
-  # Only for 2.0.9: Fix shebang shell in build-aux/install-sh.
-  # http://debbugs.gnu.org/cgi/bugreport.cgi?bug=14201#19
-  def patches; DATA; end
-
   def install
-    system './autogen.sh' if build.head?
-
+    system "./autogen.sh" if build.head?
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
-                          "--with-libreadline-prefix=#{Formula.factory('readline').prefix}"
-    system "make install"
+                          "--with-libreadline-prefix=#{Formula["readline"].opt_prefix}",
+                          "--with-libgmp-prefix=#{Formula["gmp"].opt_prefix}"
+    system "make", "install"
 
     # A really messed up workaround required on OS X --mkhl
-    lib.cd { Dir["*.dylib"].each {|p| ln_sf p, File.basename(p, ".dylib")+".so" }}
+    Pathname.glob("#{lib}/*.dylib") do |dylib|
+      lib.install_symlink dylib.basename => "#{dylib.basename(".dylib")}.so"
+    end
+
+    (share/"gdb/auto-load").install Dir["#{lib}/*-gdb.scm"]
+  end
+
+  test do
+    hello = testpath/"hello.scm"
+    hello.write <<-EOS.undent
+    (display "Hello World")
+    (newline)
+    EOS
+
+    ENV["GUILE_AUTO_COMPILE"] = "0"
+
+    system bin/"guile", hello
   end
 end
-
-__END__
---- guile-2.0.9.orig/build-aux/install-sh  2013-01-28 12:35:24.000000000 -0800
-+++ guile-2.0.9/build-aux/install-sh	2013-04-21 08:41:10.000000000 -0700
-@@ -1,4 +1,4 @@
--#!/nix/store/ryk1ywzz31kp4biclxq3yq6hpjycalyy-bash-4.2/bin/sh
-+#!/bin/sh
- # install - install a program, script, or datafile
-
- scriptversion=2011-11-20.07; # UTC

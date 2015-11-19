@@ -1,25 +1,32 @@
-require 'formula'
-
 class Dynamips < Formula
-  homepage 'http://www.gns3.net/dynamips/'
-  url 'http://downloads.sourceforge.net/project/gns-3/Dynamips/0.2.8-RC3-community/dynamips-0.2.8-RC3-community.tar.gz'
-  sha1 'ed7138859e6bc381ae0cf0d2620b32099845847c'
-  version '0.2.8-RC3'
+  desc "Cisco 7200/3600/3725/3745/2600/1700 Router Emulator"
+  homepage "https://github.com/GNS3/dynamips"
+  url "https://github.com/GNS3/dynamips/archive/v0.2.15.tar.gz"
+  sha256 "4f77a88470069dccab391ce786b633061511593efbd0a9b895e5711325eceb36"
 
-  depends_on 'libelf'
+  bottle do
+    cellar :any
+    sha256 "3b23d9683f4344d5bbca80bfb4328484e409e215ae7aa4c22c01d5e45217b4f9" => :yosemite
+    sha256 "c460f69bc4b30af2d57a7e624bab98ce244b7492d2ef5bd39b24c155708e0625" => :mavericks
+    sha256 "c5732f50e1571b3027d3254cce93c29bd6a6e1973a6f9830e02a9fc95721cc46" => :mountain_lion
+  end
+
+  depends_on "libelf"
+  depends_on "cmake" => :build
 
   def install
-    # Install man pages to the standard Homebrew location
-    inreplace 'Makefile' do |s|
-      s.gsub! %r|\$\(DESTDIR\)/man|, man
-    end
+    ENV.append "CFLAGS", "-I#{Formula["libelf"].include}/libelf"
 
-    arch = Hardware.is_64_bit? ? 'amd64' : 'x86'
+    arch = Hardware.is_64_bit? ? "amd64" : "x86"
 
     ENV.j1
+    system "cmake", ".", "-DANY_COMPILER=1", *std_cmake_args
     system "make", "DYNAMIPS_CODE=stable",
                    "DYNAMIPS_ARCH=#{arch}",
-                   "DESTDIR=#{prefix}",
                    "install"
+  end
+
+  test do
+    system "#{bin}/dynamips", "-e"
   end
 end

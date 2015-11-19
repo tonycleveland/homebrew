@@ -1,11 +1,12 @@
-require 'formula'
-
 class Swaks < Formula
-  homepage 'http://www.jetmore.org/john/code/swaks/'
-  url 'http://jetmore.org/john/code/swaks/swaks-20120320.0.tar.gz'
-  sha1 '2a20ba10ac0f97761edc6d1d519773192486d74c'
+  desc "SMTP command-line test tool"
+  homepage "http://www.jetmore.org/john/code/swaks/"
+  url "http://www.jetmore.org/john/code/swaks/files/swaks-20130209.0.tar.gz"
+  sha256 "0b0967256dca82776f610f1db862bc47644b236f325fa48cbdb2651babd41f7c"
+
+  bottle :unneeded
 
   def install
-    bin.install 'swaks'
+    bin.install "swaks"
   end
 end

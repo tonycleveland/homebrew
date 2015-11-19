@@ -1,18 +1,18 @@
-require 'formula'
-
 class Gradle < Formula
-  homepage 'http://www.gradle.org/'
-  url 'http://services.gradle.org/distributions/gradle-1.8-bin.zip'
-  sha1 'f14299582a1ab6c1293a43697ecda4b2673e34b1'
+  desc "Build system based on the Groovy language"
+  homepage "https://www.gradle.org/"
+  url "https://downloads.gradle.org/distributions/gradle-2.9-bin.zip"
+  sha256 "c9159ec4362284c0a38d73237e224deae6139cbde0db4f0f44e1c7691dd3de2f"
 
-  devel do
-    url 'http://services.gradle.org/distributions/gradle-1.9-rc-1-bin.zip'
-    sha1 '9867a3ab08e40dcf5997319c2d262d7a4dc1bc0a'
-    version '1.9-rc1'
-  end
+  bottle :unneeded
 
   def install
     libexec.install %w[bin lib]
-    bin.install_symlink libexec+'bin/gradle'
+    bin.install_symlink libexec+"bin/gradle"
+  end
+
+  test do
+    output = shell_output("#{bin}/gradle --version")
+    assert_match /Gradle #{version}/, output
   end
 end

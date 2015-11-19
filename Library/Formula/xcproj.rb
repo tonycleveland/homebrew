@@ -1,23 +1,22 @@
-require 'formula'
-
 class Xcproj < Formula
-  homepage 'https://github.com/0xced/xcproj'
-  url 'https://github.com/0xced/xcproj/archive/0.1.1.tar.gz'
-  sha1 '3cf2e286dda4d647e8031026145fb964d826f0a3'
+  desc "Manipulate Xcode project files"
+  homepage "https://github.com/0xced/xcproj"
+  url "https://github.com/0xced/xcproj/archive/0.1.2.tar.gz"
+  sha256 "5281fbe618eb406cc012f1fb2996662c2a7919400c1eb6fdd03f4e85f2da0bfb"
 
-  head 'https://github.com/0xced/xcproj.git'
+  head "https://github.com/0xced/xcproj.git"
 
   depends_on :macos => :mountain_lion
   depends_on :xcode
 
   def install
-    system 'xcodebuild', "-project", "xcproj.xcodeproj",
-                         "-scheme", "xcproj",
-                         "SYMROOT=build",
-                         "DSTROOT=#{prefix}",
-                         "INSTALL_PATH=/bin",
-                         "-verbose",
-                         "install"
+    xcodebuild "-project", "xcproj.xcodeproj",
+               "-scheme", "xcproj",
+               "SYMROOT=build",
+               "DSTROOT=#{prefix}",
+               "INSTALL_PATH=/bin",
+               "-verbose",
+               "install"
   end
 
   def caveats

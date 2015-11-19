@@ -1,33 +1,34 @@
-require 'formula'
-
 class Unar < Formula
-  homepage 'http://unarchiver.c3.cx/commandline'
-  url 'http://theunarchiver.googlecode.com/files/unar1.8.1_src.zip'
-  version '1.8.1'
-  sha1 'fe052cd7042651cccc7ba0e9c4d6d7dba5102fd4'
+  desc "RAR archive command-line tools"
+  homepage "http://unarchiver.c3.cx/commandline"
+  url "https://theunarchiver.googlecode.com/files/unar1.8.1_src.zip"
+  version "1.8.1"
+  sha256 "67ccb1c780150840f38de63b8e7047717ef4c71b7574d9ef57bd9d9c93255709"
 
-  head 'https://code.google.com/p/theunarchiver/' , :using => :hg
+  head "https://code.google.com/p/theunarchiver/", :using => :hg
 
-  depends_on :xcode
+  depends_on :xcode => :build
 
   bottle do
     cellar :any
-    sha1 '18a517d2e2e79da17567fc2457e1a398336de27b' => :mountain_lion
-    sha1 '84b82f23f0a053f4d3a6ee9eb0d1edd66cc1f97c' => :lion
-    sha1 'c0313a5a1c6fad5b4ba6b3ac729871bdc76839bd' => :snow_leopard
+    revision 2
+    sha256 "3b6c6c9b3daad466a48d2212990303afee2e7b4d7104bea8300d67bd9a1b801d" => :el_capitan
+    sha1 "cb7c91f0aab580a0d4edb2db4934b7879cb468e3" => :mavericks
+    sha1 "35f2b3655adfed8daed2eee14f757c0ada553c00" => :mountain_lion
+    sha1 "a6254624528195ab69b6adf3b649571814b4d638" => :lion
   end
 
   def install
     # Build XADMaster.framework, unar and lsar
-    system "xcodebuild -project ./XADMaster/XADMaster.xcodeproj -target XADMaster SYMROOT=../ -configuration Release"
-    system "xcodebuild -project ./XADMaster/XADMaster.xcodeproj -target unar SYMROOT=../ -configuration Release"
-    system "xcodebuild -project ./XADMaster/XADMaster.xcodeproj -target lsar SYMROOT=../ -configuration Release"
+    xcodebuild "-project", "./XADMaster/XADMaster.xcodeproj", "-target", "XADMaster", "SYMROOT=../", "-configuration", "Release"
+    xcodebuild "-project", "./XADMaster/XADMaster.xcodeproj", "-target", "unar", "SYMROOT=../", "-configuration", "Release"
+    xcodebuild "-project", "./XADMaster/XADMaster.xcodeproj", "-target", "lsar", "SYMROOT=../", "-configuration", "Release"
 
     bin.install "./Release/unar", "./Release/lsar"
 
     lib.install "./Release/libXADMaster.a"
     frameworks.install "./Release/XADMaster.framework"
-    (include/'libXADMaster').install_symlink Dir["#{frameworks}/XADMaster.framework/Headers/*"]
+    (include/"libXADMaster").install_symlink Dir["#{frameworks}/XADMaster.framework/Headers/*"]
 
     cd "./Extra" do
       man1.install "lsar.1", "unar.1"
@@ -35,8 +36,8 @@ class Unar < Formula
     end
   end
 
-  def test
-    system bin/'unar', '--version'
-    system bin/'lsar', '--version'
+  test do
+    system bin/"unar", "--version"
+    system bin/"lsar", "--version"
   end
 end

@@ -1,13 +1,18 @@
-require 'formula'
-
 class RbenvWhatis < Formula
-  homepage 'https://github.com/rkh/rbenv-whatis'
-  url 'https://github.com/rkh/rbenv-whatis/archive/9bf9f2.tar.gz'
-  sha1 'a78eb1ce44974d7080087f96d8b17f1334b9e03c'
+  desc "Resolves abbreviations and aliases to Ruby versions"
+  homepage "https://github.com/rkh/rbenv-whatis"
+  url "https://github.com/rkh/rbenv-whatis/archive/v1.0.0.tar.gz"
+  sha256 "1a09f824d1dcbca360565930fa66e93a9a2840c1bb45935e2ee989ce57d1f6e6"
 
-  depends_on 'rbenv'
+  bottle :unneeded
+
+  depends_on "rbenv"
 
   def install
-    prefix.install Dir['*']
+    prefix.install Dir["*"]
+  end
+
+  test do
+    system "rbenv", "whatis", "2.0"
   end
 end

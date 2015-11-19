@@ -1,27 +1,31 @@
-require 'formula'
-
 class OfflineImap < Formula
-  homepage 'http://offlineimap.org/'
-  url 'https://github.com/OfflineIMAP/offlineimap/archive/v6.5.5.zip'
-  sha1 '90541e4f6d439edf0aa0afbff2b4bfc1c1f10d10'
+  desc "Synchronizes emails between two repositories"
+  homepage "http://offlineimap.org/"
+  url "https://github.com/OfflineIMAP/offlineimap/archive/v6.5.7.tar.gz"
+  sha256 "b7de52c7d8995e0657bb55da13531c8d6f96d828217159477c685ae408e390a3"
+  head "https://github.com/OfflineIMAP/offlineimap.git"
 
-  head 'https://github.com/OfflineIMAP/offlineimap.git'
+  bottle :unneeded
 
   def install
-    prefix.install 'offlineimap.conf', 'offlineimap.conf.minimal'
-    libexec.install 'bin/offlineimap' => 'offlineimap.py'
-    libexec.install 'offlineimap'
-    bin.install_symlink libexec+'offlineimap.py' => 'offlineimap'
+    etc.install "offlineimap.conf", "offlineimap.conf.minimal"
+    libexec.install "bin/offlineimap" => "offlineimap.py"
+    libexec.install "offlineimap"
+    bin.install_symlink libexec+"offlineimap.py" => "offlineimap"
   end
 
   def caveats; <<-EOS.undent
     To get started, copy one of these configurations to ~/.offlineimaprc:
     * minimal configuration:
-        cp -n #{prefix}/offlineimap.conf.minimal ~/.offlineimaprc
+        cp -n #{etc}/offlineimap.conf.minimal ~/.offlineimaprc
 
     * advanced configuration:
-        cp -n #{prefix}/offlineimap.conf ~/.offlineimaprc
+        cp -n #{etc}/offlineimap.conf ~/.offlineimaprc
     EOS
+  end
+
+  test do
+    system bin/"offlineimap", "--version"
   end
 
   def plist; <<-EOS.undent
@@ -35,7 +39,7 @@ class OfflineImap < Formula
         <string>#{plist_name}</string>
         <key>ProgramArguments</key>
         <array>
-          <string>#{opt_prefix}/bin/offlineimap</string>
+          <string>#{opt_bin}/offlineimap</string>
         </array>
         <key>StartInterval</key>
         <integer>300</integer>

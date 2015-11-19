@@ -1,91 +1,59 @@
-require 'formula'
-
 class Tmux < Formula
-  homepage 'http://tmux.sourceforge.net'
-  url 'http://downloads.sourceforge.net/project/tmux/tmux/tmux-1.8/tmux-1.8.tar.gz'
-  sha1 '08677ea914e1973ce605b0008919717184cbd033'
+  desc "Terminal multiplexer"
+  homepage "https://tmux.github.io/"
+
+  stable do
+    url "https://github.com/tmux/tmux/releases/download/2.1/tmux-2.1.tar.gz"
+    sha256 "31564e7bf4bcef2defb3cb34b9e596bd43a3937cad9e5438701a81a5a9af6176"
+
+    patch do
+      # This fixes the Tmux 2.1 update that broke the ability to use select-pane [-LDUR]
+      # to switch panes when in a maximized pane https://github.com/tmux/tmux/issues/150#issuecomment-149466158
+      url "https://github.com/tmux/tmux/commit/a05c27a7e1c4d43709817d6746a510f16c960b4b.diff"
+      sha256 "2a60a63f0477f2e3056d9f76207d4ed905de8a9ce0645de6c29cf3f445bace12"
+    end
+  end
+
+  bottle do
+    cellar :any
+    revision 1
+    sha256 "671875e204c40cfdd202ab734bce872c2089eb69d6f8ba9e0e42e08f76d534a1" => :el_capitan
+    sha256 "bf0b9f1d072017cba16945d6b1777edafe6f5b737d3aa43657a3f041af6503ae" => :yosemite
+    sha256 "0f8cad0fd30933e9ce863a7db647ca197535f79f623ff19b054fb4b03b1c0613" => :mavericks
+  end
 
   head do
-    url 'git://git.code.sf.net/p/tmux/tmux-code'
+    url "https://github.com/tmux/tmux.git"
 
-    depends_on :automake
-    depends_on :libtool
+    depends_on "autoconf" => :build
+    depends_on "automake" => :build
+    depends_on "libtool" => :build
   end
 
-  depends_on 'pkg-config' => :build
-  depends_on 'libevent'
-
-  def patches
-    # Fixes installation failure on Snow Leopard
-    # http://sourceforge.net/mailarchive/forum.php?thread_name=CAJfQvvc2QDU%3DtXWb-sc-NK0J8cgnDRMDod6CNKO1uYqu%3DY5CXg%40mail.gmail.com&forum_name=tmux-users
-    # http://sourceforge.net/p/tmux/tickets/41/
-    # Fixes abnormal displaying Korean letters on Mac OS X
-    # https://gist.github.com/niceview/5343842
-    # Accepted upstream, can be removed in next version.
-    DATA unless build.head?
-  end
+  depends_on "pkg-config" => :build
+  depends_on "libevent"
 
   def install
     system "sh", "autogen.sh" if build.head?
 
-    ENV.append "LDFLAGS", '-lresolv'
+    ENV.append "LDFLAGS", "-lresolv"
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}",
                           "--sysconfdir=#{etc}"
-    system "make install"
 
-    bash_completion.install "examples/bash_completion_tmux.sh" => 'tmux'
-    (share/'tmux').install "examples"
+    system "make", "install"
+
+    bash_completion.install "examples/bash_completion_tmux.sh" => "tmux"
+    pkgshare.install "examples"
   end
 
   def caveats; <<-EOS.undent
     Example configurations have been installed to:
-      #{share}/tmux/examples
+      #{opt_pkgshare}/examples
     EOS
   end
 
-  def test
+  test do
     system "#{bin}/tmux", "-V"
   end
 end
-
-__END__
-diff --git a/osdep-darwin.c b/osdep-darwin.c
-index 23de9d5..b5efe84 100644
---- a/osdep-darwin.c
-+++ b/osdep-darwin.c
-@@ -33,17 +33,17 @@ struct event_base	*osdep_event_init(void);
- char *
- osdep_get_name(int fd, unused char *tty)
- {
--	struct proc_bsdshortinfo	bsdinfo;
-+	struct proc_bsdinfo bsdinfo;
-	pid_t				pgrp;
-	int				ret;
-
-	if ((pgrp = tcgetpgrp(fd)) == -1)
-		return (NULL);
-
--	ret = proc_pidinfo(pgrp, PROC_PIDT_SHORTBSDINFO, 0,
-+	ret = proc_pidinfo(pgrp, PROC_PIDTBSDINFO, 0,
-	    &bsdinfo, sizeof bsdinfo);
--	if (ret == sizeof bsdinfo && *bsdinfo.pbsi_comm != '\0')
--		return (strdup(bsdinfo.pbsi_comm));
-+	if (ret == sizeof bsdinfo && *bsdinfo.pbi_comm != '\0')
-+		return (strdup(bsdinfo.pbi_comm));
-	return (NULL);
- }
-
-diff --git a/utf8.c b/utf8.c
-index 88d847a..34e5087 100644
---- a/utf8.c
-+++ b/utf8.c
-@@ -173,7 +173,7 @@ struct utf8_width_entry utf8_width_table[] = {
-	{ 0x30000, 0x3fffd, 2, NULL, NULL },
-	{ 0x00711, 0x00711, 0, NULL, NULL },
-	{ 0x0fe00, 0x0fe0f, 0, NULL, NULL },
--	{ 0x01160, 0x011ff, 0, NULL, NULL },
-+	{ 0x01160, 0x011ff, 1, NULL, NULL },
-	{ 0x0180b, 0x0180d, 0, NULL, NULL },
-	{ 0x10a3f, 0x10a3f, 0, NULL, NULL },
-	{ 0x00981, 0x00981, 0, NULL, NULL },

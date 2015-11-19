@@ -1,13 +1,15 @@
-require 'formula'
-
 class Ddclient < Formula
-  homepage 'http://sourceforge.net/apps/trac/ddclient'
-  url 'http://downloads.sourceforge.net/project/ddclient/ddclient/ddclient-3.8.1/ddclient-3.8.1.tar.bz2'
-  sha1 '2fc0909cf25ab03019214e52d66c7fcd449f8bbe'
+  desc "Update dynamic DNS entries"
+  homepage "https://sourceforge.net/p/ddclient/wiki/Home"
+  url "https://downloads.sourceforge.net/project/ddclient/ddclient/ddclient-3.8.3/ddclient-3.8.3.tar.bz2"
+  sha256 "d40e2f1fd3f4bff386d27bbdf4b8645199b1995d27605a886b8c71e44d819591"
+  head "https://github.com/wimpunk/ddclient.git"
+
+  bottle :unneeded
 
   def install
     # Adjust default paths in script
-    inreplace 'ddclient' do |s|
+    inreplace "ddclient" do |s|
       s.gsub! "/etc/ddclient", "#{etc}/ddclient"
       s.gsub! "/var/cache/ddclient", "#{var}/run/ddclient"
     end
@@ -15,30 +17,30 @@ class Ddclient < Formula
     sbin.install "ddclient"
 
     # Install sample files
-    inreplace 'sample-ddclient-wrapper.sh',
+    inreplace "sample-ddclient-wrapper.sh",
       "/etc/ddclient", "#{etc}/ddclient"
 
-    inreplace 'sample-etc_cron.d_ddclient',
+    inreplace "sample-etc_cron.d_ddclient",
       "/usr/sbin/ddclient", "#{sbin}/ddclient"
 
-    inreplace 'sample-etc_ddclient.conf',
+    inreplace "sample-etc_ddclient.conf",
       "/var/run/ddclient.pid", "#{var}/run/ddclient/pid"
 
-    (share+'doc/ddclient').install %w(
+    doc.install %w[
       sample-ddclient-wrapper.sh
       sample-etc_cron.d_ddclient
       sample-etc_ddclient.conf
-    )
+    ]
 
     # Create etc & var paths
-    (etc+'ddclient').mkpath
-    (var+'run/ddclient').mkpath
+    (etc+"ddclient").mkpath
+    (var+"run/ddclient").mkpath
   end
 
   def caveats; <<-EOS.undent
     For ddclient to work, you will need to create a configuration file
     in #{etc}/ddclient, a sample configuration can be found in
-    #{opt_prefix}/share/doc/ddclient.
+    #{opt_share}/doc/ddclient.
 
     Note: don't enable daemon mode in the configuration file; see
     additional information below.
@@ -62,7 +64,7 @@ class Ddclient < Formula
       <string>#{plist_name}</string>
       <key>ProgramArguments</key>
       <array>
-        <string>#{opt_prefix}/sbin/ddclient</string>
+        <string>#{opt_sbin}/ddclient</string>
         <string>-file</string>
         <string>#{etc}/ddclient/ddclient.conf</string>
       </array>
@@ -79,5 +81,18 @@ class Ddclient < Formula
     </dict>
     </plist>
     EOS
+  end
+
+  test do
+    begin
+      pid = fork do
+        exec sbin/"ddclient", "-file", doc/"sample-etc_ddclient.conf", "-debug", "-verbose", "-noquiet"
+      end
+      sleep 1
+    ensure
+      Process.kill "TERM", pid
+      Process.wait
+    end
+    $?.success?
   end
 end

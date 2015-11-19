@@ -1,9 +1,8 @@
-require 'formula'
-
 class Gzrt < Formula
-  homepage 'http://www.urbanophile.com/arenn/coding/gzrt/gzrt.html'
-  url 'http://www.urbanophile.com/arenn/coding/gzrt/gzrt-0.6.tar.gz'
-  sha1 '6b0ce648fd973771b899fa866d23c81cdf9d036e'
+  desc "Gzip recovery toolkit"
+  homepage "http://www.urbanophile.com/arenn/coding/gzrt/gzrt.html"
+  url "http://www.urbanophile.com/arenn/coding/gzrt/gzrt-0.8.tar.gz"
+  sha256 "b0b7dc53dadd8309ad9f43d6d6be7ac502c68ef854f1f9a15bd7f543e4571fee"
 
   def install
     system "make"

@@ -1,21 +1,23 @@
-require 'formula'
-
 class RubyBuild < Formula
-  homepage 'https://github.com/sstephenson/ruby-build'
-  url 'https://github.com/sstephenson/ruby-build/archive/v20131028.tar.gz'
-  sha1 '4fa33cbcc5f84f2e7b4ec160fb3fd5119ad11404'
+  desc "Install various Ruby versions and implementations"
+  homepage "https://github.com/sstephenson/ruby-build"
+  url "https://github.com/sstephenson/ruby-build/archive/v20151028.tar.gz"
+  sha256 "3c83ae35c48869404884603b784927a8bd1d3e041c555996afb1286fc20aa708"
 
-  head 'https://github.com/sstephenson/ruby-build.git'
+  bottle :unneeded
 
-  depends_on 'autoconf' => :recommended
-  depends_on 'pkg-config' => :recommended
+  head "https://github.com/sstephenson/ruby-build.git"
+
+  depends_on "autoconf" => [:recommended, :run]
+  depends_on "pkg-config" => [:recommended, :run]
+  depends_on "openssl" => :recommended
 
   def install
-    ENV['PREFIX'] = prefix
+    ENV["PREFIX"] = prefix
     system "./install.sh"
   end
 
   test do
-    system "#{bin}/ruby-build --version | grep #{version}"
+    system "#{bin}/ruby-build", "--definitions"
   end
 end

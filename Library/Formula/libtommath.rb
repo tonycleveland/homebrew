@@ -1,74 +1,25 @@
-require 'formula'
-
 class Libtommath < Formula
-  homepage 'http://libtom.org/?page=features&newsitems=5&whatfile=ltm'
-  url 'http://libtom.org/files/ltm-0.42.0.tar.bz2'
-  sha1 '9b192701cf62b85e9bd65fbb4d622d04cfa5ee0d'
+  desc "C library for number theoretic multiple-precision integers"
+  # homepage/url down since ~May 2015
+  homepage "http://libtom.org/?page=features&newsitems=5&whatfile=ltm"
+  url "http://libtom.org/files/ltm-0.42.0.tar.bz2"
+  mirror "https://distfiles.macports.org/libtommath/ltm-0.42.0.tar.bz2"
+  sha256 "7b5c258304c34ac5901cfddb9f809b9b3b8ac7d04f700cf006ac766a923eb217"
 
-  def patches
-    DATA # Makefile tries to install as root:wheel
+  bottle do
+    cellar :any_skip_relocation
+    revision 2
+    sha256 "b0f4e06eaf98729a5a8657538f7b9b8cd6f11926f09c34489b3e0b5cfb9bb376" => :el_capitan
+    sha256 "e6ed2cbd074bb7b8c2287baac219bf5a928dd84c8fc4c69d178358f3810164fe" => :yosemite
+    sha256 "fbc9c911c91862cad93470cac7e03aba2183faeadb6d67d2a15a0e730efc8103" => :mavericks
+    sha256 "537f66d9668409f36ef2c2b99bbd02e1a103e86a2603a66dc66c280763ab9c4a" => :mountain_lion
   end
 
   def install
-    ENV['DESTDIR'] = prefix
-    system "make install"
+    ENV["DESTDIR"] = prefix
+
+    system "make"
+    include.install Dir["tommath*.h"]
+    lib.install "libtommath.a"
   end
 end
-
-__END__
-diff --git a/makefile b/makefile
-index 70de306..989e1b7 100755
---- a/makefile
-+++ b/makefile
-@@ -27,19 +27,6 @@ CFLAGS  += -fomit-frame-pointer
-
- endif
-
--#install as this user
--ifndef INSTALL_GROUP
--   GROUP=wheel
--else
--   GROUP=$(INSTALL_GROUP)
--endif
--
--ifndef INSTALL_USER
--   USER=root
--else
--   USER=$(INSTALL_USER)
--endif
--
- #default files to install
- ifndef LIBNAME
-    LIBNAME=libtommath.a
-@@ -52,10 +39,13 @@ HEADERS=tommath.h tommath_class.h tommath_superclass.h
- #LIBPATH-The directory for libtommath to be installed to.
- #INCPATH-The directory to install the header files for libtommath.
- #DATAPATH-The directory to install the pdf docs.
-+ifndef DESTDIR
- DESTDIR=
--LIBPATH=/usr/lib
--INCPATH=/usr/include
--DATAPATH=/usr/share/doc/libtommath/pdf
-+endif
-+
-+LIBPATH=/lib
-+INCPATH=/include
-+DATAPATH=/share/doc/libtommath/pdf
-
- OBJECTS=bncore.o bn_mp_init.o bn_mp_clear.o bn_mp_exch.o bn_mp_grow.o bn_mp_shrink.o \
- bn_mp_clamp.o bn_mp_zero.o  bn_mp_set.o bn_mp_set_int.o bn_mp_init_size.o bn_mp_copy.o \
-@@ -113,10 +103,10 @@ profiled_single:
-        ranlib $(LIBNAME)
-
- install: $(LIBNAME)
--	install -d -g $(GROUP) -o $(USER) $(DESTDIR)$(LIBPATH)
--	install -d -g $(GROUP) -o $(USER) $(DESTDIR)$(INCPATH)
--	install -g $(GROUP) -o $(USER) $(LIBNAME) $(DESTDIR)$(LIBPATH)
--	install -g $(GROUP) -o $(USER) $(HEADERS) $(DESTDIR)$(INCPATH)
-+	install -d $(DESTDIR)$(LIBPATH)
-+	install -d $(DESTDIR)$(INCPATH)
-+	install $(LIBNAME) $(DESTDIR)$(LIBPATH)
-+	install $(HEADERS) $(DESTDIR)$(INCPATH)
-
- test: $(LIBNAME) demo/demo.o
-        $(CC) $(CFLAGS) demo/demo.o $(LIBNAME) -o test

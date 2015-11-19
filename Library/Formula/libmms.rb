@@ -1,24 +1,32 @@
-require 'formula'
-
 class Libmms < Formula
-  homepage 'http://sourceforge.net/projects/libmms/'
-  url 'http://downloads.sourceforge.net/project/libmms/libmms/0.6.2/libmms-0.6.2.tar.gz'
-  sha1 'cdef62fd1a0e2585dd2111fc94b032f84290e351'
+  desc "Library for parsing mms:// and mmsh:// network streams"
+  homepage "https://sourceforge.net/projects/libmms/"
+  url "https://downloads.sourceforge.net/project/libmms/libmms/0.6.4/libmms-0.6.4.tar.gz"
+  sha256 "3c05e05aebcbfcc044d9e8c2d4646cd8359be39a3f0ba8ce4e72a9094bee704f"
 
-  depends_on 'pkg-config' => :build
-  depends_on 'glib'
+  bottle do
+    cellar :any
+    revision 2
+    sha256 "61c4dd24598198386342dd9c700e218b6b83c82627efc781daa89acfaca96066" => :el_capitan
+    sha256 "f915d916dd81ad9f767b6905e166dae07df72e70dc0c844c8011abed9f144252" => :yosemite
+    sha256 "b55ae55a0d684ba1e3654eee96769d206ce0c22a4ab7bad5241eb1c51bda7778" => :mavericks
+  end
 
-  def patches
-    # see https://trac.macports.org/ticket/27988
-    if MacOS.version <= :leopard
-      { :p0 => "https://trac.macports.org/export/87883/trunk/dports/multimedia/libmms/files/src_mms-common.h.patch" }
+  depends_on "pkg-config" => :build
+  depends_on "glib"
+
+  # https://trac.macports.org/ticket/27988
+  if MacOS.version <= :leopard
+    patch :p0 do
+      url "https://raw.githubusercontent.com/Homebrew/patches/1fac7062/libmms/src_mms-common.h.patch"
+      sha256 "773193b878b7c061f05fe76f0ea5d331b8ab3e7b348608fae8cb144139e94798"
     end
   end
 
   def install
-    ENV.append 'LDFLAGS', '-liconv'
+    ENV.append "LDFLAGS", "-liconv"
     system "./configure", "--disable-dependency-tracking",
                           "--prefix=#{prefix}"
-    system "make install"
+    system "make", "install"
   end
 end

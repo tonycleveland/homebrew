@@ -1,41 +1,34 @@
-require 'formula'
-
 class Tcpreplay < Formula
-  homepage 'http://tcpreplay.synfin.net'
-  url 'http://downloads.sourceforge.net/project/tcpreplay/tcpreplay/3.4.4/tcpreplay-3.4.4.tar.gz'
-  sha1 '9e4cca81cfbfb919f8759e1a27ce1b3b963ff3b8'
+  desc "Replay saved tcpdump files at arbitrary speeds"
+  homepage "http://tcpreplay.appneta.com"
+  url "https://github.com/appneta/tcpreplay/releases/download/v4.1.0/tcpreplay-4.1.0.tar.gz"
+  sha256 "ad285b08d7a61ed88799713c4c5d657a7a503eee832304d3a767f67efe5d1a20"
 
-  # Hard-code use of dylib instead of so
-  def patches; DATA; end
+  bottle do
+    cellar :any
+    revision 1
+    sha256 "03bfe9130780358c6a9d37e8b663f84c0e939b03c5efa87c90985584d95d2cbc" => :el_capitan
+    sha256 "26ae99b72e3dc9feb27db71dd1f49de8734aff9debc1ed279c5a359fa5d4fece" => :yosemite
+    sha256 "ab0379428462fbdc2653feae2bcc404cf6b6d2129ddf0461019c53794ce87e4f" => :mavericks
+  end
+
+  depends_on "libdnet" => :recommended
 
   def install
-    system "./configure", "--disable-dependency-tracking", "--disable-debug",
+    # Recognise .tbd files inside Xcode 7 as valid.
+    # https://github.com/appneta/tcpreplay/pull/202
+    # Merged but into configure.ac, so inreplace here to avoid needing autotools.
+    inreplace "configure", "for ext in .dylib .so", "for ext in .dylib .so .tbd"
+
+    system "./configure", "--disable-dependency-tracking",
+                          "--disable-debug",
                           "--prefix=#{prefix}",
-                          "--enable-dynamic-link"
-    system "make install"
+                          "--enable-dynamic-link",
+                          "--with-libpcap=#{MacOS.sdk_path}/usr"
+    system "make", "install"
+  end
+
+  test do
+    system "#{bin}/tcpreplay", "--version"
   end
 end
-
-__END__
-diff --git a/configure b/configure
-index d41d433..9514748 100755
---- a/configure
-+++ b/configure
-@@ -9872,7 +9872,7 @@ darwin* | rhapsody*)
-   soname_spec='${libname}${release}${major}$shared_ext'
-   shlibpath_overrides_runpath=yes
-   shlibpath_var=DYLD_LIBRARY_PATH
--  shrext_cmds='`test .$module = .yes && echo .so || echo .dylib`'
-+  shrext_cmds=".dylib"
- 
-   sys_lib_search_path_spec="$sys_lib_search_path_spec /usr/local/lib"
-   sys_lib_dlsearch_path_spec='/usr/local/lib /lib /usr/lib'
-@@ -14675,7 +14675,7 @@ darwin* | rhapsody*)
-   soname_spec='${libname}${release}${major}$shared_ext'
-   shlibpath_overrides_runpath=yes
-   shlibpath_var=DYLD_LIBRARY_PATH
--  shrext_cmds='`test .$module = .yes && echo .so || echo .dylib`'
-+  shrext_cmds=".dylib"
- 
-   sys_lib_dlsearch_path_spec='/usr/local/lib /lib /usr/lib'
-   ;;

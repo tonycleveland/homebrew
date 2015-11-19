@@ -1,7 +1,7 @@
-require 'testing_env'
-require 'bottles'
+require "testing_env"
+require "bottles"
 
-class BottleTagTests < Test::Unit::TestCase
+class BottleTagTests < Homebrew::TestCase
   def test_tag_tiger_ppc
     MacOS.stubs(:version).returns(MacOS::Version.new("10.4"))
     Hardware::CPU.stubs(:type).returns(:ppc)
@@ -46,13 +46,6 @@ class BottleTagTests < Test::Unit::TestCase
     Hardware::CPU.stubs(:family).returns(:g5)
     MacOS.stubs(:prefer_64_bit?).returns(true)
     assert_equal :leopard_g5_64, bottle_tag
-  end
-
-  def test_tag_leopard_intel
-    MacOS.stubs(:version).returns(MacOS::Version.new("10.5"))
-    Hardware::CPU.stubs(:type).returns(:intel)
-    MacOS.stubs(:prefer_64_bit?).returns(false)
-    assert_equal :leopard, bottle_tag
   end
 
   def test_tag_leopard_intel_64

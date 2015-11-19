@@ -1,23 +1,22 @@
-require 'formula'
-
 # Xcode 4.3 provides the Apple libtool.
 # This is not the same so as a result we must install this as glibtool.
 
 class Libtool < Formula
-  homepage 'http://www.gnu.org/software/libtool/'
-  url 'http://ftpmirror.gnu.org/libtool/libtool-2.4.2.tar.gz'
-  mirror 'http://ftp.gnu.org/gnu/libtool/libtool-2.4.2.tar.gz'
-  sha1 '22b71a8b5ce3ad86e1094e7285981cae10e6ff88'
+  desc "Generic library support script"
+  homepage "https://www.gnu.org/software/libtool/"
+  url "http://ftpmirror.gnu.org/libtool/libtool-2.4.6.tar.xz"
+  mirror "https://ftp.gnu.org/gnu/libtool/libtool-2.4.6.tar.xz"
+  sha256 "7c87a8c2c8c0fc9cd5019e402bed4292462d00a718a7cd5f11218153bf28b26f"
 
   bottle do
-    sha1 'c8505f4e25f567555e0794c4aa000228e50d4b47' => :mountain_lion
-    sha1 'b8ed9137176e40333bb538cc464aa7da4456b8ed' => :lion
-    sha1 '5ce78673209a022b06a0d3d97e755d95d3d8b137' => :snow_leopard
+    cellar :any
+    sha256 "6cb942b57a00f038100af861b4e835a79dae305c13aee550be21b71c4dfc48ed" => :el_capitan
+    sha1 "2d08e8a6d58d789194efcb3d6e4b822e6ad409cc" => :yosemite
+    sha1 "f545d684854815e7a5a5c1d4e6372ac26a7516ff" => :mavericks
+    sha1 "dd1e72102dda61ab33da205e9cfb507a269fd0b9" => :mountain_lion
   end
 
-  if MacOS::Xcode.provides_autotools? or File.file? "/usr/bin/glibtoolize"
-    keg_only "Xcode 4.2 and below provide glibtool."
-  end
+  keg_only :provided_until_xcode43
 
   option :universal
 
@@ -27,7 +26,7 @@ class Libtool < Formula
                           "--prefix=#{prefix}",
                           "--program-prefix=g",
                           "--enable-ltdl-install"
-    system "make install"
+    system "make", "install"
   end
 
   def caveats; <<-EOS.undent
@@ -37,6 +36,6 @@ class Libtool < Formula
   end
 
   test do
-    system "#{bin}/glibtool", 'execute', '/usr/bin/true'
+    system "#{bin}/glibtool", "execute", "/usr/bin/true"
   end
 end
