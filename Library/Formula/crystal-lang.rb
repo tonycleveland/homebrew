@@ -1,31 +1,30 @@
 class CrystalLang < Formula
   desc "Fast and statically typed, compiled language with Ruby-like syntax"
   homepage "http://crystal-lang.org/"
-  url "https://github.com/manastech/crystal/archive/0.9.1.tar.gz"
-  sha256 "b6e04c9ec5f4bb2235211c635eb7da7522113cd0f4c3410cdd07bb3ae0de0c38"
+  url "https://github.com/manastech/crystal/archive/0.11.0.tar.gz"
+  sha256 "2aab021f344c28a7f2bb51fb33d273f8c9c95b6adfdae6f578405f891e10236b"
   head "https://github.com/manastech/crystal.git"
 
   bottle do
-    sha256 "bda84aafa263a59ab7288ed1438a90202e7e30e7e50f97d90d35b78e45689cf1" => :el_capitan
-    sha256 "4273cdbffa3ca35891c196a2a618ddecba56638e9cde96312789d3454384aee0" => :yosemite
-    sha256 "6f5c16d445212da957f466be10b5d99bd9e8a5b5164c82e090e61d73d66ca15b" => :mavericks
+    sha256 "9b70d76388447b369422f3206376a83a1b60f0000f048522c21e827a02a04fed" => :el_capitan
+    sha256 "2b9ef5870ab0a24e151e9fbb0118892b2a6d5d2143f268769c3318beeed216a8" => :yosemite
+    sha256 "73f0b540afb474aa471e03c8ddc684b817acc7c6c2639275616ca95256190510" => :mavericks
   end
 
   resource "boot" do
-    url "https://github.com/manastech/crystal/releases/download/0.9.0/crystal-0.9.0-1-darwin-x86_64.tar.gz"
-    sha256 "fd670b01dfa35805c8c57126dabebfe25c0942b673d9b3c6d5116d8b3f5ba53a"
+    url "https://github.com/manastech/crystal/releases/download/0.10.2/crystal-0.10.2-1-darwin-x86_64.tar.gz"
+    sha256 "6b1ffdbb662a27b2da2bccb358aff7c7d01d6ae1b1636fd5a99a3d73de4b8f4b"
   end
 
   resource "shards" do
-    url "https://github.com/ysbaddaden/shards/archive/v0.5.3.tar.gz"
-    sha256 "33a42709dc7f69b892f551b6a2d44b49d9d75b6e54e186fcb7534c8485f90139"
+    url "https://github.com/ysbaddaden/shards/archive/v0.6.0.tar.gz"
+    sha256 "cbaaa6f9d9d140ec410623b97cb86fb44640125495f1e48fb8a1875ccedc4cc5"
   end
 
   option "without-release", "Do not build the compiler in release mode"
   option "without-shards", "Do not include `shards` dependency manager"
 
   depends_on "libevent"
-  depends_on "libpcl"
   depends_on "bdw-gc"
   depends_on "llvm" => :build
   depends_on "libyaml" if build.with?("shards")

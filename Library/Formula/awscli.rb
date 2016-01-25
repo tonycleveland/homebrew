@@ -1,15 +1,15 @@
 class Awscli < Formula
   desc "Official Amazon AWS command-line interface"
   homepage "https://aws.amazon.com/cli/"
-  url "https://pypi.python.org/packages/source/a/awscli/awscli-1.9.7.tar.gz"
-  mirror "https://github.com/aws/aws-cli/archive/1.9.7.tar.gz"
-  sha256 "0b37c294113da1cd4c41b586a1c7235a2474b1a37d1b6a3209d80cca7fa88638"
+  url "https://pypi.python.org/packages/source/a/awscli/awscli-1.10.0.tar.gz"
+  mirror "https://github.com/aws/aws-cli/archive/1.10.0.tar.gz"
+  sha256 "c0f016eacfc05bedeb4cad22846c44a3bc301ea5d433559e50be4f4aa44a353d"
 
   bottle do
     cellar :any_skip_relocation
-    sha256 "bd090d2ecba5f3891a36435bd104c4d934d14c8f3482b2873b62336d168d7673" => :el_capitan
-    sha256 "d81d34186f13f39ee4e6ae7a2a5745951fc437956aecc7bef5c2b3889f13bf6f" => :yosemite
-    sha256 "235d59ee7865dbbdf2956a11da40048b08bd0018f49b344482f5efe8cd062818" => :mavericks
+    sha256 "cc74fefe12bbd4599c4c6f843795eb0841d423215947f71df2351c8239a0a85e" => :el_capitan
+    sha256 "faaffad321b9164622071c31f6efef39041879a2c167677d9cc1a42aacd9c569" => :yosemite
+    sha256 "90f2bc98f7e18cf73180d6bb3654b006413b7128484ea9777a0cf4afbbf30665" => :mavericks
   end
 
   head do
@@ -29,8 +29,8 @@ class Awscli < Formula
   depends_on :python if MacOS.version <= :lion
 
   resource "six" do
-    url "https://pypi.python.org/packages/source/s/six/six-1.9.0.tar.gz"
-    sha256 "e24052411fc4fbd1f672635537c3fc2330d9481b18c0317695b46259512c91d5"
+    url "https://pypi.python.org/packages/source/s/six/six-1.10.0.tar.gz"
+    sha256 "105f8d68616f8248e24bf0e9372ef04d3cc10104f1980f54d57b2ce73a5ad56a"
   end
 
   resource "python-dateutil" do
@@ -49,8 +49,8 @@ class Awscli < Formula
   end
 
   resource "botocore" do
-    url "https://pypi.python.org/packages/source/b/botocore/botocore-1.3.7.tar.gz"
-    sha256 "3b5e8712b5f93fb04741b5aa7f513699bb06bd3fc2bf440c9c22247b0f154671"
+    url "https://pypi.python.org/packages/source/b/botocore/botocore-1.3.22.tar.gz"
+    sha256 "02a6d320b09179bc5dcbafd4be732d9431bfebf5bed6d6b6508eca96b599a399"
   end
 
   resource "docutils" do
@@ -59,13 +59,13 @@ class Awscli < Formula
   end
 
   resource "pyasn1" do
-    url "https://pypi.python.org/packages/source/p/pyasn1/pyasn1-0.1.8.tar.gz"
-    sha256 "5d33be7ca0ec5997d76d29ea4c33b65c00c0231407fff975199d7f40530b8347"
+    url "https://pypi.python.org/packages/source/p/pyasn1/pyasn1-0.1.9.tar.gz"
+    sha256 "853cacd96d1f701ddd67aa03ecc05f51890135b7262e922710112f12a2ed2a7f"
   end
 
   resource "rsa" do
-    url "https://pypi.python.org/packages/source/r/rsa/rsa-3.1.4.tar.gz"
-    sha256 "e2b0b05936c276b1edd2e1525553233b666df9e29b5c3ba223eed738277c82a0"
+    url "https://pypi.python.org/packages/source/r/rsa/rsa-3.2.3.tar.gz"
+    sha256 "14db288cc40d6339dedf60d7a47053ab004b4a8976a5c59402a211d8fc5bf21f"
   end
 
   def install
